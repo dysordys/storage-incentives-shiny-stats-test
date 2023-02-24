@@ -31,14 +31,15 @@ ui <- fluidPage(
                   min = 2^10, max = 2^13, value = 2^10, step = 1)
     ),
     mainPanel(
-      tableOutput("out")
-    )
+      plotOutput("outFig"),
+      tableOutput("outTab")
+    ),
   )
 )
 
 
 server <- function(input, output) {
-  output$out <- renderTable({
+  output$outTab <- renderTable({
     if (input$tab == "Revealers") {
       dat %>%
         group_by(round) %>%
@@ -51,6 +52,22 @@ server <- function(input, output) {
     } else {
       tibble(round = min(dat$round):max(dat$round)) %>%
         anti_join(distinct(select(dat, round)), by = "round")
+    }
+  })
+  output$outFig <- renderPlot({
+    if (input$tab == "Revealers") {
+      dat %>%
+        group_by(round) %>%
+        mutate(honest = (id == id[type == "won"])) %>%
+        filter(type == "revealed") %>%
+        summarise(nHonest = sum(honest)) %>%
+        ungroup() %>%
+        mutate(price = accumPrice(nHonest, initPrice = input$ip)) %>%
+        ggplot(aes(x = round, y = price)) +
+        geom_line(colour = "steelblue") +
+        theme_bw(base_size = 16)
+    } else {
+      NULL
     }
   })
 }

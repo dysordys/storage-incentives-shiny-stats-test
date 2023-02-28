@@ -18,6 +18,7 @@ fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rou
     url <- str_c("https://api.swarmscan.io/v1/redistribution/",
                  "rounds\\?start\\=", roundPointer)
   }
+  return(dat)
 }
 
 cleanData <- function(rawDataTibble) {

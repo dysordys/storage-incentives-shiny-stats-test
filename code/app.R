@@ -2,6 +2,70 @@ library(shiny)
 library(tidyverse)
 
 
+fetchJson <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
+  rawJsonStr <- system(str_c("curl -s ", url), intern = TRUE)
+  jsonlite::parse_json(rawJsonStr[1])
+}
+
+fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rounds") {
+  dat <- tibble()
+  url <- start
+  roundPointer <- 0
+  while (!is.null(roundPointer)) {
+    jsonDat <- fetchJson(url)
+    dat <- bind_rows(dat, jsonToTibble(jsonDat))
+    roundPointer <- jsonDat$"next"
+    url <- str_c("https://api.swarmscan.io/v1/redistribution/",
+                 "rounds\\?start\\=", roundPointer)
+  }
+}
+
+cleanData <- function(rawDataTibble) {
+  rawDataTibble %>%
+    distinct() %>% # Occasionally repeated records across files; remove duplicates
+    mutate(stake = as.numeric(stake), # Convert some fields to numbers
+           stakeDensity = as.numeric(stakeDensity),
+           depth = as.integer(depth),
+           blockNumber = as.integer(blockNumber),
+           countCommits = as.integer(countCommits),
+           countReveals = as.integer(countReveals),
+           rewardAmount = as.double(rewardAmount))
+}
+
+reshapeEvent <- function(eventStr) {
+  eventStr %>%
+    enframe(name = "quantity") %>%
+    # Remove entries beginning with "stakeFrozen":
+    filter(str_detect(quantity, "stakeFrozen", negate = TRUE)) %>%
+    # Remove prefixes before ".", as these always refer to the same basic data:
+    mutate(quantity = str_remove(quantity, "^[^\\.]*\\.")) %>%
+    # Remove roundNumber, as that is already in the overall data:
+    filter(quantity != "roundNumber") %>%
+    pivot_wider(names_from = "quantity")
+}
+
+jsonToTibble <- function(jsonDat) {
+  as_tibble(jsonDat) %>%
+    select(rounds) %>%
+    unnest(rounds) %>%
+    mutate(name = names(rounds)) %>%
+    pivot_wider(names_from = name, values_from = rounds, values_fn = list) %>%
+    unnest(c(roundNumber, events)) %>%
+    unnest(roundNumber) %>%
+    arrange(roundNumber) %>%
+    mutate(events = map(events, ~map(.x, function(y) unlist(y)) %>%
+                          enframe(name = "event"))) %>%
+    unnest(events) %>%
+    mutate(value = map(value, reshapeEvent)) %>%
+    unnest(value) %>%
+    mutate(id = if_else(type == "event", reserveCommitment, hash)) %>%
+    mutate(type = if_else(type == "event", name, "won")) %>%
+    select(-c(reserveCommitment, hash, name))
+}
+
+#jsonToTibble(fetchJson()) %>% select(roundNumber) %>% distinct()
+#fetchJsonAll()
+
 adjustPrice <- function(currentPrice, redundancy) {
   minimumPrice <- 1024
   increaseRate <- c(1036, 1027, 1025, 1024, 1023, 1021, 1017, 1012)

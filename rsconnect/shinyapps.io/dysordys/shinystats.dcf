@@ -1,0 +1,14 @@
+name: shinystats
+title: shinystats
+username:
+account: dysordys
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8446051
+bundleId: 6902484
+url: https://dysordys.shinyapps.io/shinystats/
+when: 1677681631.9297
+lastSyncTime: 1677681631.92971
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: experiment.R|unit_tests/test_price_model.R

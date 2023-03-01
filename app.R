@@ -1,51 +1,36 @@
 library(shiny)
 library(tidyverse)
 
-
-source("download_clean.R") # Functions to download and clean data
+source("download_data.R") # Functions to download data
+source("clean_data.R") # Functions to clean up the data
 source("price_model.R") # Functions for tracking price oracle
-
 
 dat <- read_rds("data.rds") # Initialize data
 
 
+
 ui <- fluidPage(
-  sidebarLayout(
-    sidebarPanel(
-      selectInput(inputId = "tab", label = "Which table?",
-                  choices = c("Revealers", "Skipped rounds")),
-      sliderInput(inputId = "ip", label = "Initial price",
-                  min = 2^10, max = 2^13, value = 2^10, step = 1),
-      actionButton("downloadData", "Refresh data")
-    ),
-    mainPanel(
-      textOutput("outMessage"),
-      plotOutput("outFig"),
-      tableOutput("outTab")
-    ),
+  verticalLayout(
+    selectInput(inputId = "tab", label = "Which table?",
+                choices = c("Revealers", "Skipped rounds")),
+    sliderInput(inputId = "ip", label = "Initial price", min = 2^10,
+                max = 2^13, value = 2^10, step = 1, width = "80%"),
+    sliderInput(inputId = "roundRange", label = "Rounds to consider",
+                min = min(dat$round), max = max(dat$round),
+                value = range(dat$round), width = "80%"),
+    actionButton(inputId = "downloadData", label = "Refresh data"),
+    plotOutput("outFig"),
+    tableOutput("outTab")
   )
 )
 
 
+
 server <- function(input, output) {
-  output$outTab <- renderTable({
-    if (input$tab == "Revealers") {
-      dat %>%
-        group_by(round) %>%
-        mutate(honest = (id == id[type == "won"])) %>%
-        filter(type == "revealed") %>%
-        summarise(`number of revealers` = n(),
-                  `number of honest revealers` = sum(honest)) %>%
-        ungroup() %>%
-        mutate(price = accumPrice(`number of honest revealers`, initPrice = input$ip))
-    } else {
-      tibble(round = min(dat$round):max(dat$round)) %>%
-        anti_join(distinct(select(dat, round)), by = "round")
-    }
-  })
   output$outFig <- renderPlot({
     if (input$tab == "Revealers") {
       dat %>%
+        filter(round %in% reduce(input$roundRange, `:`)) %>%
         group_by(round) %>%
         mutate(honest = (id == id[type == "won"])) %>%
         filter(type == "revealed") %>%
@@ -59,14 +44,33 @@ server <- function(input, output) {
       NULL
     }
   })
+  output$outTab <- renderTable({
+    if (input$tab == "Revealers") {
+      dat %>%
+        filter(round %in% reduce(input$roundRange, `:`)) %>%
+        group_by(round) %>%
+        mutate(honest = (id == id[type == "won"])) %>%
+        filter(type == "revealed") %>%
+        summarise(`number of revealers` = n(),
+                  `honest revealers` = sum(honest)) %>%
+        ungroup() %>%
+        mutate(price = accumPrice(`honest revealers`, initPrice = input$ip))
+    } else {
+      tibble(round = min(dat$round):max(dat$round)) %>%
+        anti_join(distinct(select(dat, round)), by = "round") %>%
+        filter(round %in% reduce(input$roundRange, `:`))
+    }
+  })
   observe({
-    renderText("Downloading data (this may take a while)...")
-    fetchJsonAll() %>% cleanData() %>% write_rds("data.rds", compress = "xz")
-    dat <- read_rds("data.rds")
-    renderText("Downloading and updating finished.")
+    dat <<-
+      fetchJsonAll(minRound = max(dat$round)) %>%
+      cleanData() %>%
+      mergeData(dat) %>%
+      write_rds("data.rds", compress = "xz")
   }) %>%
     bindEvent(input$downloadData)
 }
+
 
 
 shinyApp(ui = ui, server = server)

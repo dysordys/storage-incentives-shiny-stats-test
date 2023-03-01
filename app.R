@@ -32,8 +32,8 @@ server <- function(input, output) {
       dat %>%
         filter(round %in% reduce(input$roundRange, `:`)) %>%
         group_by(round) %>%
-        mutate(honest = (id == id[type == "won"])) %>%
-        filter(type == "revealed") %>%
+        mutate(honest = (id == id[event == "won"])) %>%
+        filter(event == "revealed") %>%
         summarise(nHonest = sum(honest)) %>%
         ungroup() %>%
         mutate(price = accumPrice(nHonest, initPrice = input$ip)) %>%
@@ -41,7 +41,13 @@ server <- function(input, output) {
         geom_line(colour = "steelblue") +
         theme_bw(base_size = 16)
     } else {
-      NULL
+      tibble(round = reduce(input$roundRange, `:`)) %>%
+        anti_join(distinct(select(dat, round)), by = "round") %>%
+        ggplot(aes(x = round, y = 0)) +
+        geom_point(colour = "steelblue", alpha = 0.7) +
+        theme_bw(base_size = 16) +
+        theme(axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+              axis.text.y = element_blank())
     }
   })
   output$outTab <- renderTable({
@@ -49,8 +55,8 @@ server <- function(input, output) {
       dat %>%
         filter(round %in% reduce(input$roundRange, `:`)) %>%
         group_by(round) %>%
-        mutate(honest = (id == id[type == "won"])) %>%
-        filter(type == "revealed") %>%
+        mutate(honest = (id == id[event == "won"])) %>%
+        filter(event == "revealed") %>%
         summarise(`number of revealers` = n(),
                   `honest revealers` = sum(honest)) %>%
         ungroup() %>%

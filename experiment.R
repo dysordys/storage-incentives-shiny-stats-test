@@ -1,9 +1,7 @@
 library(tidyverse)
 
-dat <- read_rds("../data/data_parsed.rds") %>%
-  mutate(id = if_else(type == "event", reserveCommitment, hash)) %>%
-  mutate(type = if_else(type == "event", name, "won")) %>%
-  select(round = roundNumber, event, type, id, reward = rewardAmount,
+dat <- read_rds("data.rds") %>%
+  select(round, type, type, id, reward = rewardAmount,
          commits = countCommits, reveals = countReveals, depth, stake, overlay)
 
 
@@ -138,30 +136,3 @@ dat %>%
   `/`(max(.)) %>%
   `+`(runif(length(.), 0, 1e-5)) %>% # To break ties in KS test
   ks.test("punif") # No evidence of non-uniformity
-
-
-# Price adjustment:
-adjustPrice <- function(currentPrice, redundancy) {
-  minimumPrice <- 1024
-  increaseRate <- c(1036, 1027, 1025, 1024, 1023, 1021, 1017, 1012)
-  targetRedundancy <- 4
-  maxConsideredExtraRedundancy <- 4
-  usedRedundancy <- min(redundancy, targetRedundancy + maxConsideredExtraRedundancy)
-  max((increaseRate[usedRedundancy] * currentPrice) / minimumPrice, minimumPrice)
-}
-
-accumPrice <- function(redundancyVec, initPrice) {
-  accumulate(redundancyVec, function(x, y) adjustPrice(x, y), .init = initPrice)[-1]
-}
-
-dat %>%
-  group_by(round) %>%
-  mutate(honest = (id == id[type == "won"])) %>%
-  filter(type == "revealed") %>%
-  summarise(revealers = n(),
-            honest_revealers = sum(honest)) %>%
-  ungroup() %>%
-  mutate(price = accumPrice(honest_revealers, initPrice = 1024)) %>%
-  ggplot(aes(x = round, y = price)) +
-  geom_line(colour = "steelblue") +
-  theme_bw()

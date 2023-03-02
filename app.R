@@ -5,7 +5,17 @@ source("download_data.R") # Functions to download data
 source("clean_data.R") # Functions to clean up the data
 source("price_model.R") # Functions for tracking price oracle
 
-dat <- read_rds("data.rds") # Initialize data
+loadDataFromDropbox <- function(path = "shinystats/data.rds") {
+  rdrop2::drop_download(path, overwrite = TRUE)
+}
+
+saveDataToDropbox <- function(dat) {
+  write_rds(dat, "data.rds", compress = "xz")
+  rdrop2::drop_upload("data.rds", path = "shinystats") # Upload to Dropbox
+}
+
+loadDataFromDropbox() # Initialize data
+dat <- read_rds("data.rds")
 
 
 
@@ -68,11 +78,12 @@ server <- function(input, output) {
     }
   })
   observe({
-    dat <<-
-      fetchJsonAll(minRound = max(dat$round)) %>%
+    fetchJsonAll(minRound = max(dat$round)) %>%
       cleanData() %>%
       mergeData(dat) %>%
-      write_rds("data.rds", compress = "xz")
+      saveDataToDropbox()
+    loadDataFromDropbox()
+    dat <<- read_rds("data.rds")
   }) %>%
     bindEvent(input$downloadData)
 }

@@ -16,3 +16,10 @@ fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rou
   }
   return(dat)
 }
+
+
+downloadAllData <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
+  fetchJsonAll(start = url) %>%
+    cleanData() %>%
+    filter(round != min(round)) # Sometimes 1st round in data is corrupted; remove it
+}

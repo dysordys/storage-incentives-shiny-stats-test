@@ -21,7 +21,7 @@ reshapeEvents <- function(events) {
     mutate(depth = if_else(type == "won", winner.depth, depth)) %>%
     mutate(stakeDensity = if_else(type == "won", winner.stakeDensity, stakeDensity)) %>%
     select(-contains("winner"), -contains("stakeFrozen"), -contains("roundNumber"),
-           -reserveCommitment, -hash, -name, -topics, -type)
+           -contains("count"), -reserveCommitment, -hash, -name, -topics, -type)
 }
 
 

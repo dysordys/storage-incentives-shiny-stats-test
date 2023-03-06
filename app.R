@@ -6,9 +6,9 @@
 #  * profitability by neighborhood (how evenly distributed?)
 #
 # What is the distribution of number of overlays (nodes) per neighborhood?
-#  * distribution of honest revealers per neighbourhood
-#  * distribution of playing and staked nodes per neighbourhood
-#  * distribution of ‘dishonest’ nodes per neighbourhood
+#  * distribution of honest revealers per neighborhood
+#  * distribution of playing and staked nodes per neighborhood
+#  * distribution of ‘dishonest’ nodes per neighborhood
 #
 # Other
 #  * In the last x rounds, what was the average number of revealers by round
@@ -27,10 +27,10 @@ library(shiny)
 library(tidyverse)
 library(rdrop2)
 
-source("download_data.R")
-source("clean_data.R")
+source("download_clean.R")
 source("price_model.R")
-source("dropbox_comm.R")
+source("dropbox_conn.R")
+source("display_items.R")
 
 
 loadDataFromDropbox()
@@ -58,44 +58,16 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$outFig <- renderPlot({
     if (input$tab == "Revealers") {
-      dat %>%
-        group_by(round) %>%
-        mutate(honest = (id == id[event == "won"])) %>%
-        filter(event == "revealed") %>%
-        summarise(nHonest = sum(honest)) %>%
-        ungroup() %>%
-        mutate(price = accumPrice(nHonest, initPrice = input$ip)) %>%
-        filter(round %in% reduce(input$roundRange, `:`)) %>%
-        ggplot(aes(x = round, y = price)) +
-        geom_line(colour = "steelblue") +
-        theme_bw(base_size = 16) +
-        theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
+      revealerPerRoundFig(dat, initPrice = input$ip, roundRange = input$roundRange)
     } else {
-      tibble(round = reduce(input$roundRange, `:`)) %>%
-        anti_join(distinct(select(dat, round)), by = "round") %>%
-        ggplot(aes(x = round, y = 0)) +
-        geom_point(colour = "steelblue", alpha = 0.7) +
-        theme_bw(base_size = 16) +
-        theme(axis.title.y = element_blank(), axis.ticks.y = element_blank(),
-              axis.text.y = element_blank(),
-              plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
+      missedRoundsFig(dat, roundRange = input$roundRange)
     }
   })
   output$outTab <- renderTable({
     if (input$tab == "Revealers") {
-      dat %>%
-        group_by(round) %>%
-        mutate(honest = (id == id[event == "won"])) %>%
-        filter(event == "revealed") %>%
-        summarise(`number of revealers` = n(),
-                  `honest revealers` = sum(honest)) %>%
-        ungroup() %>%
-        mutate(price = accumPrice(`honest revealers`, initPrice = input$ip)) %>%
-        filter(round %in% reduce(input$roundRange, `:`))
+      revealerPerRoundTab(dat, initPrice = input$ip, roundRange = input$roundRange)
     } else {
-      tibble(round = min(dat$round):max(dat$round)) %>%
-        anti_join(distinct(select(dat, round)), by = "round") %>%
-        filter(round %in% reduce(input$roundRange, `:`))
+      missedRoundsTab(dat, roundRange = input$roundRange)
     }
   })
   observe({

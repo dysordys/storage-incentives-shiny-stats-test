@@ -27,12 +27,13 @@ dropAuthRefresh <- function(new_user = FALSE,
   return(dropbox_token)
 }
 
-loadDataFromDropbox <- function(path = "shinystats/data.rds",
-                                dtoken = dropAuthRefresh()) {
-  drop_download(path, overwrite = TRUE, dtoken = dtoken)
+
+loadDataFromDropbox <- function(path = "shinystats/data.rds") {
+  drop_download(path, overwrite = TRUE, dtoken = dropAuthRefresh())
 }
 
-saveDataToDropbox <- function(dat, dtoken = dropAuthRefresh()) {
-  write_rds(dat, "data.rds", compress = "xz")
-  drop_upload("data.rds", path = "shinystats", dtoken = dtoken)
+
+saveDataToDropbox <- function(dat) {
+  write_rds(dat, "data.rds")
+  drop_upload("data.rds", path = "shinystats", dtoken = dropAuthRefresh())
 }

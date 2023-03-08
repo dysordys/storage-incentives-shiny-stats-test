@@ -12,7 +12,7 @@ dat %>% filter(depth == 9) # The few claims of depth = 9 happened here
 
 
 # Distribution of rewards:
-dat %>% # The above means we can safely convert the reward to double:
+dat %>%
   filter(event == "won") %>%
   ggplot(aes(x = reward)) +
   geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 100) +

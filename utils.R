@@ -48,10 +48,18 @@ skippedRounds <- function(dat) {
 }
 
 
-nhood <- function(overlay, depth = 8) {
-  #byte <- 8L
-  #noBytes <- ceiling(depth / byte)
-  strtoi(str_sub(overlay, 1, 4))
+takeWhile <- function(vec, cond) {
+  for (i in seq_along(vec) - 1) if (!cond(vec[i + 1])) break
+  if (i == 0) return(vec[0]) else return(vec[1:i])
+}
+
+
+nhood <- function(overlay, depth = 8L) {
+  byte <- 8L
+  noBytes <- ceiling(depth / byte)
+  totBytes <- (str_length(overlay) - 2L) / 2L # Subtract 2 because of the starting "0x"
+  map_int(seq(3, 2 * min(noBytes, totBytes) + 2, by = 2),
+          function(x) strtoi(str_c("0x", str_sub(overlay, x, x + 1))))
 }
 
 
@@ -62,7 +70,7 @@ proximity <- function(fst, snd) {
   for (i in 1:b) {
     oxo <- bitwXor(fst[i], snd[i])
     for (j in 1:m) {
-      if (bitwAnd(bitwShiftR(oxo, 8 - j), 0x01)) return(8 * (i - 1) + j - 1)
+      if (bitwAnd(bitwShiftR(oxo, 8 - j), 0x01) != 0) return(8 * (i - 1) + j - 1)
     }
   }
   return(maxPO)

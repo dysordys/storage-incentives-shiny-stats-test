@@ -14,31 +14,47 @@ accumPrice <- function(redundancyVec, initPrice) {
 }
 
 
-restrictRounds <- function(dat, roundRange) {
-  validRange <- length(roundRange) == 2 && (roundRange[1] <= roundRange[2])
-  if (validRange) filter(dat, round %in% reduce(round(roundRange), `:`)) else dat
+isValidRoundRange <- function(roundRange) {
+  (length(roundRange) == 2) && (roundRange[1] <= roundRange[2])
 }
 
 
-revealersPerRound <- function(dat, initPrice = 1024, roundRange = NA) {
+restrictRounds <- function(dat, roundRange) {
+  if (isValidRoundRange(roundRange))
+    filter(dat, round %in% reduce(round(roundRange), `:`)) else dat
+}
+
+
+roundsToPlot <- function(roundRange) {
+  if (isValidRoundRange(roundRange)) {
+    floor(seq(round(roundRange)[1], round(roundRange)[2], length.out = 2001))
+  } else NULL
+}
+
+
+revealersPerRound <- function(dat) {
   dat %>%
     group_by(round) %>%
     mutate(honest = (id == id[event == "won"])) %>%
     filter(event == "revealed") %>%
     summarise(`number of revealers` = n(),
               `honest revealers` = sum(honest)) %>%
-    ungroup() %>%
-    mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
-    transmute(round, price, `number of revealers`,
-              `inaccurate revealers` = `number of revealers` - `honest revealers`) %>%
-    restrictRounds(roundRange)
+    ungroup()
 }
 
 
-missedRounds <- function(dat, roundRange = NA) {
+pricePerRound <- function(dat, initPrice = 1024) {
+  dat %>%
+    revealersPerRound() %>%
+    mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
+    transmute(round, price, `number of revealers`,
+              `inaccurate revealers` = `number of revealers` - `honest revealers`)
+}
+
+
+missedRounds <- function(dat) {
   tibble(round = min(dat$round):max(dat$round)) %>%
-    anti_join(distinct(select(dat, round)), by = "round") %>%
-    restrictRounds(roundRange)
+    anti_join(distinct(select(dat, round)), by = "round")
 }
 
 

@@ -1,9 +1,10 @@
 source("utils.R")
 
 
-revealerPerRoundFig <- function(dat, initPrice = 1024, roundRange = NA) {
+priceFig <- function(dat, initPrice = 1024, roundRange = NA) {
   dat %>%
-    revealersPerRound(initPrice, roundRange) %>%
+    pricePerRound(initPrice) %>%
+    restrictRounds(roundRange) %>%
     ggplot(aes(x = round, y = price)) +
     geom_line(colour = "steelblue") +
     theme_bw(base_size = 16) +
@@ -13,7 +14,8 @@ revealerPerRoundFig <- function(dat, initPrice = 1024, roundRange = NA) {
 
 missedRoundsFig <- function(dat, roundRange = NA) {
   dat %>%
-    missedRounds(roundRange) %>%
+    missedRounds() %>%
+    restrictRounds(roundRange) %>%
     ggplot(aes(x = round, y = 0)) +
     geom_point(colour = "steelblue", alpha = 0.7) +
     theme_bw(base_size = 16) +

@@ -26,11 +26,11 @@
 
 library(shiny)
 library(tidyverse)
-library(rdrop2)
+#library(rdrop2)
 
 source("download_clean.R")
 #source("dropbox_conn.R")
-source("display_items.R")
+source("figures.R")
 
 
 #token <- drop_auth()
@@ -80,8 +80,9 @@ ui <- fluidPage(
     tabPanel(
       title = "Reward amount",
       verticalLayout(
-        radioButtons(inputId = "rewardFigLogY", label = NULL,
-                     choices = c("Linear y-axis" = FALSE, "Logarithmic y-axis" = TRUE)),
+        radioButtons(inputId = "rewardFigLogY", label = NULL, selected = TRUE,
+                     choices = c("Linear y-axis" = FALSE,
+                                 "Pseudo-logarithmic y-axis" = TRUE)),
         plotOutput("outRewardFig")
       )
     )
@@ -92,10 +93,11 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   output$outPriceFig <- renderPlot(
-    revealerPerRoundFig(dat, roundRange = input$roundRange)
+    priceFig(dat, roundRange = input$roundRange)
   )
   output$outPriceTab <- renderTable(
-    revealersPerRound(dat, roundRange = input$roundRange) %>%
+    pricePerRound(dat) %>%
+      restrictRounds(input$roundRange) %>%
       { if (input$dishonestFilter == "Show all rounds") . else
         filter(., `inaccurate revealers` > 0)
       }
@@ -104,7 +106,8 @@ server <- function(input, output) {
     missedRoundsFig(dat, roundRange = input$roundRange)
   )
   output$outSkippedTab <- renderTable(
-    missedRounds(dat, roundRange = input$roundRange) %>%
+    missedRounds(dat) %>%
+      restrictRounds(input$roundRange) %>%
       rename(`Skipped rounds:` = round)
   )
   output$outRewardFig <- renderPlot(

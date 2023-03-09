@@ -29,6 +29,8 @@ revealersPerRound <- function(dat, initPrice = 1024, roundRange = NA) {
               `honest revealers` = sum(honest)) %>%
     ungroup() %>%
     mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
+    transmute(round, price, `number of revealers`,
+              `inaccurate revealers` = `number of revealers` - `honest revealers`) %>%
     restrictRounds(roundRange)
 }
 

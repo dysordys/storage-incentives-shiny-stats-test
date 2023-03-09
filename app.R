@@ -40,28 +40,49 @@ dat <- read_rds("data.rds")
 
 
 ui <- fluidPage(
-  tabsetPanel(
+  navbarPage(
+    title = "View data on:",
+    sliderInput(inputId = "roundRange",
+                label = "Range of rounds",
+                min = min(dat$round), max = max(dat$round),
+                value = range(dat$round), width = "80%"),
     tabPanel(
-      title = "Graph",
-      verticalLayout(
-        selectInput(inputId = "tabGraph", label = "Which data?",
-                    choices = c("Revealers", "Skipped rounds")),
-        sliderInput(inputId = "roundRangeGraph", label = "Range of rounds",
-                    min = min(dat$round), max = max(dat$round),
-                    value = range(dat$round), width = "80%"),
-        #actionButton(inputId = "downloadData", label = "Refresh data"),
-        plotOutput("outFig"),
+      title = "Price",
+      tabsetPanel(
+        tabPanel(
+          title = "Figure",
+          verticalLayout(plotOutput("outPriceFig"))
+        ),
+        tabPanel(
+          title = "Table",
+          verticalLayout(
+            radioButtons(inputId = "dishonestFilter", label = NULL,
+                         choices = c("Show all rounds",
+                                     "Show only rounds with inaccurate revealers")),
+            tableOutput("outPriceTab")
+          )
+        )
       )
     ),
     tabPanel(
-      title = "Table",
+      title = "Skipped rounds",
+      tabsetPanel(
+        tabPanel(
+          title = "Figure",
+          verticalLayout(plotOutput("outSkippedFig"))
+        ),
+        tabPanel(
+          title = "Table",
+          verticalLayout(tableOutput("outSkippedTab"))
+        )
+      )
+    ),
+    tabPanel(
+      title = "Reward amount",
       verticalLayout(
-        selectInput(inputId = "tabTab", label = "Which data?",
-                    choices = c("Revealers", "Skipped rounds")),
-        sliderInput(inputId = "roundRangeTab", label = "Range of rounds",
-                    min = min(dat$round), max = max(dat$round),
-                    value = range(dat$round), width = "80%"),
-        tableOutput("outTab")
+        radioButtons(inputId = "rewardFigLogY", label = NULL,
+                     choices = c("Linear y-axis" = FALSE, "Logarithmic y-axis" = TRUE)),
+        plotOutput("outRewardFig")
       )
     )
   )
@@ -70,20 +91,25 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  output$outFig <- renderPlot({
-    if (input$tabGraph == "Revealers") {
-      revealerPerRoundFig(dat, roundRange = input$roundRangeGraph)
-    } else {
-      missedRoundsFig(dat, roundRange = input$roundRangeGraph)
-    }
-  })
-  output$outTab <- renderTable({
-    if (input$tabTab == "Revealers") {
-      revealersPerRound(dat, roundRange = input$roundRangeTab)
-    } else {
-      missedRounds(dat, roundRange = input$roundRangeTab)
-    }
-  })
+  output$outPriceFig <- renderPlot(
+    revealerPerRoundFig(dat, roundRange = input$roundRange)
+  )
+  output$outPriceTab <- renderTable(
+    revealersPerRound(dat, roundRange = input$roundRange) %>%
+      { if (input$dishonestFilter == "Show all rounds") . else
+        filter(., `inaccurate revealers` > 0)
+      }
+  )
+  output$outSkippedFig <- renderPlot(
+    missedRoundsFig(dat, roundRange = input$roundRange)
+  )
+  output$outSkippedTab <- renderTable(
+    missedRounds(dat, roundRange = input$roundRange) %>%
+      rename(`Skipped rounds:` = round)
+  )
+  output$outRewardFig <- renderPlot(
+    rewardDistrFig(dat, log.y = input$rewardFigLogY, roundRange = input$roundRange)
+  )
   # observe({
   #   fetchJsonAll(minRound = max(dat$round)) %>%
   #     cleanData() %>%

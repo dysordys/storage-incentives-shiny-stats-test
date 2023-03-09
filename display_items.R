@@ -25,15 +25,17 @@ missedRoundsFig <- function(dat, roundRange = NA) {
 
 
 rewardDistrFig <- function(dat, log.y = TRUE, roundRange = NA) {
-  dat %>%
+  plt <- dat %>%
     skippedRounds() %>%
     mutate(skip = as_factor(skip)) %>%
     restrictRounds(roundRange) %>%
     ggplot(aes(x = reward, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100) +
     scale_x_log10(name = "reward") +
-    { if (log.y) scale_y_log10() } +
     scale_fill_discrete(name = "skipped rounds") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"))
+  ymax <- layer_scales(plt, 1, 1)$y$range$range[2]
+  if (log.y) plt + scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                                      breaks = 10^(0:ceiling(log10(ymax)))) else plt
 }

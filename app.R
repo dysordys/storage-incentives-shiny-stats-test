@@ -30,12 +30,13 @@ library(tidyverse)
 
 source("download_clean.R")
 #source("dropbox_conn.R")
-source("figures.R")
+source("statistics.R")
 
 
 #token <- drop_auth()
 #loadDataFromDropbox(dtoken = token)
-dat <- read_rds("data.rds")
+dat <- read_rds("data.rds") %>%
+  mutate(nhood = map2_int(overlay, depth, nhoodDec), .after = overlay)
 
 
 
@@ -93,7 +94,10 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   output$outPriceFig <- renderPlot(
-    priceFig(dat, roundRange = input$roundRange)
+    dat %>%
+      pricePerRound() %>%
+      restrictRounds(input$roundRange) %>%
+      priceFig()
   )
   output$outPriceTab <- renderTable(
     pricePerRound(dat) %>%
@@ -103,7 +107,10 @@ server <- function(input, output) {
       }
   )
   output$outSkippedFig <- renderPlot(
-    missedRoundsFig(dat, roundRange = input$roundRange)
+    dat %>%
+      missedRounds() %>%
+      restrictRounds(input$roundRange) %>%
+      roundsFig()
   )
   output$outSkippedTab <- renderTable(
     missedRounds(dat) %>%
@@ -111,7 +118,11 @@ server <- function(input, output) {
       rename(`Skipped rounds:` = round)
   )
   output$outRewardFig <- renderPlot(
-    rewardDistrFig(dat, log.y = input$rewardFigLogY, roundRange = input$roundRange)
+    dat %>%
+      skippedRounds() %>%
+      mutate(skip = as_factor(skip)) %>%
+      restrictRounds(input$roundRange) %>%
+      rewardDistrFig(log.y = input$rewardFigLogY)
   )
   # observe({
   #   fetchJsonAll(minRound = max(dat$round)) %>%

@@ -1,5 +1,3 @@
-- Make sure graphs do not plot more than some maximum number of points (for sake of speed when there will be maybe millions of data points).
-
 - Read/write communication with online data source.
 
-- Refactor so that roundRange does not need to be an argument of the plotting functions?
+- Reward figure: position identity instead of stack?

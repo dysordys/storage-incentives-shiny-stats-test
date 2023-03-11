@@ -129,8 +129,8 @@ shinyApp(ui = ui, server = server)
 # fetchJsonAll(minRound = max(dat$round)) %>%
 #   cleanData() %>%
 #   mergeData(dat) %>%
-#   write_rds("data.rds")
+#   write_rds("data.rds", compress = "xz")
 
 # tictoc::tic()
-# fetchJsonAll() %>% cleanData() %>% write_rds("data2.rds")
+# fetchJsonAll() %>% cleanData() %>% write_rds("data.rds", compress = "xz")
 # tictoc::toc()

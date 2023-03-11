@@ -26,17 +26,13 @@
 
 library(shiny)
 library(tidyverse)
-#library(rdrop2)
 
 source("download_clean.R")
-#source("dropbox_conn.R")
 source("statistics.R")
 
 
-#token <- drop_auth()
-#loadDataFromDropbox(dtoken = token)
-dat <- read_rds("data.rds") %>%
-  mutate(nhood = map2_int(overlay, depth, nhoodDec), .after = overlay)
+dat <- read_rds("data.rds") #%>%
+  #mutate(nhood = map2_int(overlay, depth, nhoodDec), .after = overlay)
 
 
 
@@ -124,18 +120,17 @@ server <- function(input, output) {
       restrictRounds(input$roundRange) %>%
       rewardDistrFig(log.y = input$rewardFigLogY)
   )
-  # observe({
-  #   fetchJsonAll(minRound = max(dat$round)) %>%
-  #     cleanData() %>%
-  #     mergeData(dat) %>%
-  #     write_rds("data.rds")
-  #     #saveDataToDropbox(dtoken = token)
-  #   #loadDataFromDropbox(dtoken = token)
-  #   dat <<- read_rds("data.rds")
-  # }) %>%
-  #   bindEvent(input$downloadData)
 }
 
 
 
 shinyApp(ui = ui, server = server)
+
+# fetchJsonAll(minRound = max(dat$round)) %>%
+#   cleanData() %>%
+#   mergeData(dat) %>%
+#   write_rds("data.rds")
+
+# tictoc::tic()
+# fetchJsonAll() %>% cleanData() %>% write_rds("data2.rds")
+# tictoc::toc()

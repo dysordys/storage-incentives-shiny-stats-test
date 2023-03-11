@@ -72,8 +72,7 @@ skippedRounds <- function(dat) {
 
 
 nhoodBinStr <- function(overlay, depth = 8L) {
-  nibble <- 4L
-  numHexDigits <- ceiling(depth / nibble)
+  numHexDigits <- ceiling(depth / 4) # 4: four bits = 1 hex digit
   str_sub(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
 }
 
@@ -148,9 +147,10 @@ roundsFig <- function(dat) {
 rewardDistrFig <- function(dat, log.y = TRUE) {
   plt <- dat %>%
     ggplot(aes(x = reward, fill = skip)) +
-    geom_histogram(colour = NA, alpha = 0.8, bins = 100) +
+    geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
     scale_x_log10(name = "reward") +
-    scale_fill_discrete(name = "skipped rounds") +
+    scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
+                      name = "skipped rounds") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"))
   ymax <- layer_scales(plt, 1, 1)$y$range$range[2]

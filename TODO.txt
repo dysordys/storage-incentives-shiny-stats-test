@@ -1,3 +1,5 @@
-- Read/write communication with online data source.
+- Read/write communication with online data source
 
-- nhoods map!
+- stakeFrozen needs to be incorporated in data
+
+- In roundsFig: no label if error, not enough data, or similar problems

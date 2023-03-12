@@ -31,8 +31,7 @@ source("download_clean.R")
 source("statistics.R")
 
 
-dat <- read_rds("data.rds") #%>%
-  #mutate(nhood = map2_int(overlay, depth, nhoodDec), .after = overlay)
+dat <- read_rds("data.rds") %>% calculateNhoodsDec()
 
 
 
@@ -41,8 +40,8 @@ ui <- fluidPage(
     title = "View data on:",
     sliderInput(inputId = "roundRange",
                 label = "Range of rounds",
-                min = min(dat$round), max = max(dat$round),
-                value = range(dat$round), width = "80%"),
+                min = min(dat$roundNumber), max = max(dat$roundNumber),
+                value = range(dat$roundNumber), width = "80%"),
     tabPanel(
       title = "Price",
       tabsetPanel(
@@ -100,18 +99,23 @@ server <- function(input, output) {
       restrictRounds(input$roundRange) %>%
       { if (input$dishonestFilter == "Show all rounds") . else
         filter(., `inaccurate revealers` > 0)
-      }
+      } %>%
+      rename(round = roundNumber)
   )
   output$outSkippedFig <- renderPlot(
     dat %>%
       missedRounds() %>%
       restrictRounds(input$roundRange) %>%
-      roundsFig()
+      roundsFig(title = pull(., roundNumber) %>%
+                  chisqUnif() %>%
+                  `$`(p.value) %>%
+                  round(5) %>%
+                  str_c("p = ", ., " (Chi-squared uniformity test)"))
   )
   output$outSkippedTab <- renderTable(
     missedRounds(dat) %>%
       restrictRounds(input$roundRange) %>%
-      rename(`Skipped rounds:` = round)
+      rename(`Skipped rounds:` = roundNumber)
   )
   output$outRewardFig <- renderPlot(
     dat %>%
@@ -126,11 +130,11 @@ server <- function(input, output) {
 
 shinyApp(ui = ui, server = server)
 
-# fetchJsonAll(minRound = max(dat$round)) %>%
+# fetchJsonAll(minRound = max(dat$roundNumber)) %>%
 #   cleanData() %>%
-#   mergeData(dat) %>%
+#   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 
 # tictoc::tic()
-# fetchJsonAll() %>% cleanData() %>% write_rds("data.rds", compress = "xz")
+# downloadAllData() %>% write_rds("data.rds", compress = "xz")
 # tictoc::toc()

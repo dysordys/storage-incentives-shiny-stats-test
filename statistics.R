@@ -21,7 +21,7 @@ isValidRoundRange <- function(roundRange) {
 
 restrictRounds <- function(dat, roundRange) {
   if (isValidRoundRange(roundRange))
-    filter(dat, round %in% reduce(round(roundRange), `:`)) else dat
+    filter(dat, roundNumber %in% reduce(round(roundRange), `:`)) else dat
 }
 
 
@@ -39,7 +39,7 @@ roundsToPlot <- function(roundRange, maxPoints) {
 
 revealersPerRound <- function(dat) {
   dat %>%
-    group_by(round) %>%
+    group_by(roundNumber) %>%
     mutate(honest = (id == id[event == "won"])) %>%
     filter(event == "revealed") %>%
     summarise(`number of revealers` = n(),
@@ -48,26 +48,33 @@ revealersPerRound <- function(dat) {
 }
 
 
-pricePerRound <- function(dat, initPrice = 1024) {
+pricePerRound <- function(dat, initPrice = 2048) {
   dat %>%
     revealersPerRound() %>%
     mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
-    transmute(round, price, `number of revealers`,
+    transmute(`roundNumber`,
+              `price (in units of initial value)` = price / initPrice,
+              `number of revealers`,
               `inaccurate revealers` = `number of revealers` - `honest revealers`)
 }
 
 
 missedRounds <- function(dat) {
-  tibble(round = min(dat$round):max(dat$round)) %>%
-    anti_join(distinct(select(dat, round)), by = "round")
+  tibble(roundNumber = min(dat$roundNumber):max(dat$roundNumber)) %>%
+    anti_join(distinct(select(dat, roundNumber)), by = "roundNumber")
+}
+
+
+chisqUnif <- function(vec) {
+  spgs::chisq.unif.test(x = vec, interval = range(vec))
 }
 
 
 skippedRounds <- function(dat) {
   dat %>%
     filter(event == "won") %>%
-    select(round, reward) %>%
-    mutate(skip = round - lag(round, default = first(round) - 1) - 1)
+    select(roundNumber, rewardAmount) %>%
+    mutate(skip = roundNumber - lag(roundNumber, default = first(roundNumber) - 1) - 1)
 }
 
 
@@ -79,6 +86,11 @@ nhoodBinStr <- function(overlay, depth = 8L) {
 
 nhoodDec <- function(overlay, depth = 8L) {
   strtoi(nhoodBinStr(overlay, depth), base = 2)
+}
+
+
+calculateNhoodsDec <- function(dat) {
+  mutate(dat, nhood = map2_int(overlay, depth, nhoodDec), .after = overlay)
 }
 
 
@@ -100,7 +112,7 @@ rewardNhoodDistr <- function(dat) {
   dat %>%
     filter(event == "won", !is.na(nhood)) %>%
     group_by(nhood) %>%
-    summarise(n = n(), totalReward = sum(reward)) %>%
+    summarise(n = n(), totalReward = sum(rewardAmount)) %>%
     ungroup()
 }
 
@@ -115,30 +127,23 @@ participationNhoodDistrNull <- function(x, rounds, nhoods) {
 }
 
 
-participationNhoodRand <- function(nhoods, rounds) {
-  sample.int(n = nhoods, size = rounds, replace = TRUE) %>%
-    table() %>%
-    as_tibble() %>%
-    rename(nhood = ".")
-}
-
-
-priceFig <- function(dat, initPrice = 1024, maxPoints = 3001) {
+priceFig <- function(dat, maxPoints = 3001) {
   dat %>%
-    filter(round %in% roundsToPlot(range(dat$round), maxPoints)) %>%
-    ggplot(aes(x = round, y = price)) +
+    filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
+    ggplot(aes(x = roundNumber, y = `price (in units of initial value)`)) +
     geom_line(colour = "steelblue") +
+    labs(x = "round") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
-roundsFig <- function(dat) {
+roundsFig <- function(dat, title = NULL) {
   dat %>%
-    ggplot(aes(x = round)) +
+    ggplot(aes(x = roundNumber)) +
     geom_rug(colour = "steelblue", alpha = 0.6) +
-    geom_density(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
-    labs(y = "density of skipped rounds") +
+    geom_histogram(colour = "steelblue", fill = "steelblue", alpha = 0.2, bins = 30) +
+    labs(x = "round", y = "no. of skipped rounds", title = title) +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -146,7 +151,7 @@ roundsFig <- function(dat) {
 
 rewardDistrFig <- function(dat, log.y = TRUE) {
   plt <- dat %>%
-    ggplot(aes(x = reward, fill = skip)) +
+    ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
     scale_x_log10(name = "reward") +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
@@ -160,7 +165,7 @@ rewardDistrFig <- function(dat, log.y = TRUE) {
 
 
 participationNhoodHistFig <- function(dat) {
-  rounds <- length(unique(dat$round))
+  rounds <- length(unique(dat$roundNumber))
   nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
   particip <- dat %>% rewardNhoodDistr()
   nmax <- max(particip$n)
@@ -178,7 +183,7 @@ participationNhoodHistFig <- function(dat) {
 
 
 rewardNhoodQuantileFig <- function(dat) {
-  rounds <- length(unique(dat$round))
+  rounds <- length(unique(dat$roundNumber))
   nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
   dat %>%
     rewardNhoodDistr() %>%
@@ -187,23 +192,6 @@ rewardNhoodQuantileFig <- function(dat) {
     left_join(tibble(
       rank = 1:nhoods,
       predict = participationNhoodQuantileNull(seq(0.1, 0.99, l=nhoods), rounds, nhoods)
-    ), by = "rank") %>%
-    ggplot(aes(x = rank)) +
-    geom_col(aes(y = n), fill = "steelblue", colour = "steelblue", alpha = 0.2) +
-    geom_step(aes(y = predict)) +
-    labs(x = "neighbourhood ID", y = "number of win events") +
-    theme_bw() +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
-}
-
-
-rewardNhoodQuantileRandFig <- function(nhoods, rounds) {
-  participationNhoodRand(nhoods, rounds) %>%
-    arrange(desc(n)) %>%
-    rowid_to_column("rank") %>%
-    left_join(tibble(
-      rank = 1:nhoods,
-      predict = participationNhoodNull(seq(0.1, 0.99, l = nhoods), rounds, nhoods)
     ), by = "rank") %>%
     ggplot(aes(x = rank)) +
     geom_col(aes(y = n), fill = "steelblue", colour = "steelblue", alpha = 0.2) +

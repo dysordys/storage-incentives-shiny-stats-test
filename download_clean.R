@@ -5,34 +5,38 @@ fetchJson <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds")
 
 fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rounds",
                          minRound = 0) {
-  dat <- tibble()
+  jsonDat <- list()
   url <- start
   roundPtr <- .Machine$integer.max
   while (!is.null(roundPtr) && roundPtr >= minRound) {
-    jsonDat <- fetchJson(url)
-    dat <- bind_rows(dat, jsonToTibble(jsonDat))
-    roundPtr <- jsonDat$"next"
+    newJson <- fetchJson(url)
+    jsonDat <- append(jsonDat, list(newJson))
+    roundPtr <- newJson$"next"
     url <- str_c("https://api.swarmscan.io/v1/redistribution/rounds?start=", roundPtr)
   }
-  return(dat)
+  return(jsonDat)
 }
 
 
 downloadAllData <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
   fetchJsonAll(start = url) %>%
     cleanData() %>%
-    filter(round != min(round)) # Sometimes 1st round in data is corrupted; remove it
+    filter(roundNumber != min(roundNumber)) # Sometimes 1st round is corrupted; remove
 }
 
 
-jsonToTibble <- function(jsonDat) {
-  as_tibble(jsonDat) %>%
+cleanData <- function(jsonDat) {
+  tibble(json = jsonDat) %>%
+    unnest(json) %>%
     select(rounds) %>% # This will drop the unneeded "next" column, if it exists
     unnest(rounds) %>%
-    # Sometimes a round is corrupted, e.g. has no winner yet - remove these:
-    rowwise() %>% filter(ncol(events) >= 20) %>% ungroup() %>%
+    rowwise() %>% # Sometimes a round is corrupted, e.g. has no winner yet;
+    filter(ncol(events) >= 20) %>% # remove these - they have less than 20 columns
+    ungroup() %>%
     mutate(events = map(events, reshapeEvents)) %>%
-    unnest(events)
+    unnest(events) %>%
+    distinct() %>% # Remove occasional repeated records across files
+    arrange(roundNumber)
 }
 
 
@@ -43,25 +47,30 @@ reshapeEvents <- function(events) {
     unnest(data) %>%
     mutate(id = if_else(type == "event", reserveCommitment, hash)) %>%
     mutate(event = if_else(type == "event", name, "won")) %>%
-    mutate(overlay = if_else(type == "won", winner.overlay, overlay)) %>%
-    mutate(stake = if_else(type == "won", winner.stake, stake)) %>%
-    mutate(depth = if_else(type == "won", winner.depth, depth)) %>%
-    mutate(stakeDensity = if_else(type == "won", winner.stakeDensity, stakeDensity)) %>%
+    mutate(overlay = if_else(event == "won", winner.overlay, overlay)) %>%
+    mutate(stake = if_else(event == "won", winner.stake, stake)) %>%
+    mutate(depth = if_else(event == "won", winner.depth, depth)) %>%
+    mutate(stakeDensity = if_else(event == "won", winner.stakeDensity, stakeDensity)) %>%
+    relocate(event, id, rewardAmount, depth, stake, overlay) %>%
+    #bind_cols(ifelse("stakeFrozen" %in% names(.),
+    #                 cleanStakeFrozen(.$stakeFrozen),
+    #                 tibble(slashed = rep(NA, nrow(.), account = NA, time = NA)))) %>%
     select(-contains("winner"), -contains("stakeFrozen"), -contains("roundNumber"),
-           -contains("count"), -reserveCommitment, -hash, -name, -topics, -type)
+           -starts_with("count"), -reserveCommitment, -hash, -name, -topics, -type)
 }
 
 
-cleanData <- function(rawDataTable) {
-  distinct(rawDataTable) %>% # Remove occasional repeated records across files
-    arrange(roundNumber) %>%
-    rename(round = roundNumber, reward = rewardAmount) %>%
-    relocate(round, event, id, reward, depth, stake, overlay)
+cleanStakeFrozen <- function(stakeFrozenColumn) {
+  tibble(sf = stakeFrozenColumn) %>%
+    rowid_to_column("n") %>%
+    unnest(sf) %>%
+    right_join(tibble(n = 1:length(stakeFrozenColumn)), by = "n") %>%
+    select(-n)
 }
 
 
 mergeData <- function(data1, data2) {
   bind_rows(data1, data2) %>%
     distinct() %>%
-    arrange(round)
+    arrange(roundNumber)
 }

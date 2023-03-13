@@ -112,7 +112,7 @@ rewardNhoodDistr <- function(dat) {
   dat %>%
     filter(event == "won", !is.na(nhood)) %>%
     group_by(nhood) %>%
-    summarise(n = n(), totalReward = sum(rewardAmount)) %>%
+    summarise(winEvents = n(), totalReward = sum(rewardAmount)) %>%
     ungroup()
 }
 
@@ -167,36 +167,38 @@ rewardDistrFig <- function(dat, log.y = TRUE) {
 participationNhoodHistFig <- function(dat) {
   rounds <- length(unique(dat$roundNumber))
   nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
-  particip <- dat %>% rewardNhoodDistr()
-  nmax <- max(particip$n)
-  particip %>%
-    ggplot() +
-    geom_bar(aes(x = n), colour = "steelblue", fill = "steelblue", alpha = 0.2) +
-    geom_col(data = tibble(
-      n = 1:nmax,
-      pred = participationNhoodDistrNull(n, rounds, nhoods) * rounds / 9) %>%
-        filter(pred > 1e-6),
-      aes(x = n, y = pred), colour = "firebrick", fill = "firebrick", alpha = 0.2
-    ) +
-    theme_bw()
+  dat %>%
+    rewardNhoodDistr() %>%
+    count(winEvents, name = "observed") %>%
+    mutate(predicted = participationNhoodDistrNull(winEvents, rounds, nhoods) *
+             sum(observed)) %>%
+    pivot_longer(cols = !winEvents) %>%
+    ggplot(aes(x = winEvents, y = value, colour = name, fill = name)) +
+    geom_col(alpha = 0.2, position = "identity") +
+    scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    scale_fill_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    labs(x = "number of win events", y = "no. nhoods with given wins") +
+    theme_bw(base_size = 16)
 }
 
 
-rewardNhoodQuantileFig <- function(dat) {
+participationNhoodQuantileFig <- function(dat) {
   rounds <- length(unique(dat$roundNumber))
   nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
   dat %>%
     rewardNhoodDistr() %>%
-    arrange(desc(n)) %>%
+    arrange(desc(winEvents)) %>%
     rowid_to_column("rank") %>%
     left_join(tibble(
       rank = 1:nhoods,
       predict = participationNhoodQuantileNull(seq(0.1, 0.99, l=nhoods), rounds, nhoods)
     ), by = "rank") %>%
-    ggplot(aes(x = rank)) +
-    geom_col(aes(y = n), fill = "steelblue", colour = "steelblue", alpha = 0.2) +
-    geom_step(aes(y = predict)) +
-    labs(x = "neighbourhood ID", y = "number of win events") +
-    theme_bw() +
+    pivot_longer(cols = c(winEvents, predict)) %>%
+    mutate(name = recode(name, "winEvents" = "observed", "predict" = "predicted")) %>%
+    ggplot(aes(x = rank, y = value, colour = name)) +
+    geom_step() +
+    labs(x = "neighbourhoods", y = "number of win events") +
+    scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }

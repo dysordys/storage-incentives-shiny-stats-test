@@ -75,11 +75,23 @@ ui <- fluidPage(
     ),
     tabPanel(
       title = "Reward amount",
-      verticalLayout(
-        radioButtons(inputId = "rewardFigLogY", label = NULL, selected = TRUE,
-                     choices = c("Linear y-axis" = FALSE,
-                                 "Pseudo-logarithmic y-axis" = TRUE)),
-        plotOutput("outRewardFig")
+      tabsetPanel(
+        tabPanel(
+          title = "Reward distribution",
+          verticalLayout(
+            radioButtons(inputId = "rewardFigLogY", label = NULL, selected = TRUE,
+                         choices = c("Linear y-axis" = FALSE,
+                                     "Pseudo-logarithmic y-axis" = TRUE)),
+            plotOutput("outRewardFig")
+          )
+        ),
+        tabPanel(
+          title = "Wins across neighbourhoods",
+          verticalLayout(
+            plotOutput("outWinNhoodHistFig"),
+            plotOutput("outWinNhoodQuantileFig")
+          )
+        )
       )
     )
   )
@@ -123,6 +135,12 @@ server <- function(input, output) {
       mutate(skip = as_factor(skip)) %>%
       restrictRounds(input$roundRange) %>%
       rewardDistrFig(log.y = input$rewardFigLogY)
+  )
+  output$outWinNhoodHistFig <- renderPlot(
+    participationNhoodHistFig(dat)
+  )
+  output$outWinNhoodQuantileFig <- renderPlot(
+    participationNhoodQuantileFig(dat)
   )
 }
 

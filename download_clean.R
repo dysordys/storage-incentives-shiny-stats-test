@@ -20,8 +20,8 @@ fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rou
 
 downloadAllData <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
   fetchJsonAll(start = url) %>%
-    cleanData() %>%
-    filter(roundNumber != min(roundNumber)) # Sometimes 1st round is corrupted; remove
+    cleanData() %>% # Sometimes 1st round is corrupted and last isn't done yet,
+    filter(!(roundNumber %in% range(roundNumber))) # so remove these
 }
 
 

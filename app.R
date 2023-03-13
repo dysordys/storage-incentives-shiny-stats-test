@@ -12,7 +12,7 @@
 #
 # Staking
 #  * Distribution of staked nodes not playing
-#  * Distribution of stakes by neighbourhood
+#  * Distribution of stakes by neighborhood
 #
 # Other
 #  * In the last x rounds, what was the average number of revealers by round
@@ -74,7 +74,7 @@ ui <- fluidPage(
       )
     ),
     tabPanel(
-      title = "Reward amount",
+      title = "Rewards",
       tabsetPanel(
         tabPanel(
           title = "Reward distribution",
@@ -90,6 +90,12 @@ ui <- fluidPage(
           verticalLayout(
             plotOutput("outWinNhoodHistFig"),
             plotOutput("outWinNhoodQuantileFig")
+          )
+        ),
+        tabPanel(
+          title = "Total reward across neighbourhoods",
+          verticalLayout(
+            plotOutput("outRewardNhoodFig")
           )
         )
       )
@@ -141,6 +147,9 @@ server <- function(input, output) {
   )
   output$outWinNhoodQuantileFig <- renderPlot(
     participationNhoodQuantileFig(dat)
+  )
+  output$outRewardNhoodFig <- renderPlot(
+    rewardNhoodFig(dat)
   )
 }
 

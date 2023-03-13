@@ -118,7 +118,7 @@ rewardNhoodDistr <- function(dat) {
 
 
 participationNhoodQuantileNull <- function(p, rounds, nhoods) {
-  rev(qbinom(p, size = rounds, prob = 1 / nhoods))
+  qbinom(p, size = rounds, prob = 1 / nhoods)
 }
 
 
@@ -187,7 +187,7 @@ participationNhoodQuantileFig <- function(dat) {
   nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
   dat %>%
     rewardNhoodDistr() %>%
-    arrange(desc(winEvents)) %>%
+    arrange(winEvents) %>%
     rowid_to_column("rank") %>%
     left_join(tibble(
       rank = 1:nhoods,
@@ -199,6 +199,26 @@ participationNhoodQuantileFig <- function(dat) {
     geom_step() +
     labs(x = "neighbourhoods", y = "number of win events") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    theme_bw(base_size = 16) +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+}
+
+
+rewardNhoodFig <- function(dat) {
+  rounds <- length(unique(dat$roundNumber))
+  nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
+  dat %>%
+    rewardNhoodDistr() %>%
+    rename(observed = totalReward) %>%
+    arrange(observed) %>%
+    rowid_to_column("rank") %>%
+    #mutate(predicted = participationNhoodQuantileNull(seq(0.1, 0.99, l=nrow(.)), rounds,
+    #                                                  nhoods) * mean(observed)) %>%
+    #pivot_longer(cols = c(observed, predicted)) %>%
+    ggplot(aes(x = rank, y = observed)) +
+    geom_step(colour = "steelblue") +
+    labs(x = "neighbourhoods", y = "sum of rewards") +
+    #scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }

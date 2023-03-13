@@ -3,3 +3,5 @@
 - stakeFrozen needs to be incorporated in data
 
 - In roundsFig: no label if error, not enough data, or similar problems
+
+- In reward per nhood figure: predicted curve

@@ -1,10 +1,5 @@
 # Ideas for stats dashboard
 #
-# What is the distribution of rewards?
-#  * distribution of rewards (total)
-#  * distribution of rewards across neighborhoods (how evenly distributed?)
-#  * profitability by neighborhood (how evenly distributed?)
-#
 # What is the distribution of number of overlays (nodes) per neighborhood?
 #  * distribution of honest revealers per neighborhood
 #  * distribution of playing and staked nodes per neighborhood
@@ -65,7 +60,10 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel(
           title = "Figure",
-          verticalLayout(plotOutput("outSkippedFig"))
+          verticalLayout(
+            textOutput("outChiSqUnifTxt"),
+            plotOutput("outSkippedFig")
+          )
         ),
         tabPanel(
           title = "Table",
@@ -88,14 +86,36 @@ ui <- fluidPage(
         tabPanel(
           title = "Wins across neighbourhoods",
           verticalLayout(
-            plotOutput("outWinNhoodHistFig"),
-            plotOutput("outWinNhoodQuantileFig")
+            radioButtons(inputId = "winNhoodChoice", label = NULL,
+                         choices = c("Number of wins across neighbourhoods" = TRUE,
+                                     "Distribution of number of win events" = FALSE)),
+            plotOutput("outWinNhoodFig")
           )
         ),
         tabPanel(
           title = "Total reward across neighbourhoods",
           verticalLayout(
             plotOutput("outRewardNhoodFig")
+          )
+        )
+      )
+    ),
+    tabPanel(
+      title = "Nodes",
+      tabsetPanel(
+        tabPanel(
+          title = "Nodes per neighbourhood",
+          verticalLayout(
+            radioButtons(inputId = "nodesFigLogY", label = NULL, selected = TRUE,
+                         choices = c("Linear y-axis" = FALSE,
+                                     "Logarithmic y-axis" = TRUE)),
+            plotOutput("outNodesPerNhoodFig")
+          )
+        ),
+        tabPanel(
+          title = "Honest revealers per node",
+          verticalLayout(
+            plotOutput("outHonestPerNhoodFig")
           )
         )
       )
@@ -120,15 +140,26 @@ server <- function(input, output) {
       } %>%
       rename(round = roundNumber)
   )
+  output$outChiSqUnifTxt <- renderText(
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      pull(roundNumber) %>%
+      chisqUnif() %>%
+      `$`(p.value) %>%
+      round(5) %>%
+      str_c("Chi-squared test of uniformity: p = ", ., " ", case_when(
+        . < 0.01 ~ "(i.e., skipped rounds are not uniformly distributed)",
+        . < 0.05 ~ "(i.e., skipped rounds are unlikely to be uniformly distributed)",
+        . < 0.1  ~ str_c("(i.e., skipped rounds may not be uniformly distributed, ",
+                         "but it is difficult to say)"),
+        TRUE ~ "(i.e., assumption of uniformity cannot be rejected)",
+      ))
+  )
   output$outSkippedFig <- renderPlot(
     dat %>%
       missedRounds() %>%
       restrictRounds(input$roundRange) %>%
-      roundsFig(title = pull(., roundNumber) %>%
-                  chisqUnif() %>%
-                  `$`(p.value) %>%
-                  round(5) %>%
-                  str_c("p = ", ., " (Chi-squared uniformity test)"))
+      roundsFig()
   )
   output$outSkippedTab <- renderTable(
     missedRounds(dat) %>%
@@ -142,14 +173,18 @@ server <- function(input, output) {
       restrictRounds(input$roundRange) %>%
       rewardDistrFig(log.y = input$rewardFigLogY)
   )
-  output$outWinNhoodHistFig <- renderPlot(
-    participationNhoodHistFig(dat)
-  )
-  output$outWinNhoodQuantileFig <- renderPlot(
-    participationNhoodQuantileFig(dat)
+  output$outWinNhoodFig <- renderPlot(
+    if (input$winNhoodChoice) participationNhoodQuantileFig(dat) else
+      participationNhoodHistFig(dat)
   )
   output$outRewardNhoodFig <- renderPlot(
     rewardNhoodFig(dat)
+  )
+  output$outNodesPerNhoodFig <- renderPlot(
+    nodesPerNhoodFig(dat, log.y = input$nodesFigLogY)
+  )
+  output$outHonestPerNhoodFig <- renderPlot(
+    honestPerNhoodFig(dat)
   )
 }
 
@@ -158,7 +193,7 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 
 # fetchJsonAll(minRound = max(dat$roundNumber)) %>%
-#   cleanData() %>%
+#   cleanData(jsonDat) %>%
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 

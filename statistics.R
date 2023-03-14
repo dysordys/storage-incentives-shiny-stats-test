@@ -53,7 +53,7 @@ pricePerRound <- function(dat, initPrice = 2048) {
     revealersPerRound() %>%
     mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
     transmute(`roundNumber`,
-              `price (in units of initial value)` = price / initPrice,
+              `price (in units of the initial value)` = price / initPrice,
               `number of revealers`,
               `inaccurate revealers` = `number of revealers` - `honest revealers`)
 }
@@ -127,10 +127,18 @@ participationNhoodDistrNull <- function(x, rounds, nhoods) {
 }
 
 
+nodesPerNhood <- function(dat) {
+  dat %>%
+    group_by(nhood) %>%
+    count(overlay) %>%
+    ungroup()
+}
+
+
 priceFig <- function(dat, maxPoints = 3001) {
   dat %>%
     filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
-    ggplot(aes(x = roundNumber, y = `price (in units of initial value)`)) +
+    ggplot(aes(x = roundNumber, y = `price (in units of the initial value)`)) +
     geom_line(colour = "steelblue") +
     labs(x = "round") +
     theme_bw(base_size = 16) +
@@ -138,12 +146,12 @@ priceFig <- function(dat, maxPoints = 3001) {
 }
 
 
-roundsFig <- function(dat, title = NULL) {
+roundsFig <- function(dat) {
   dat %>%
     ggplot(aes(x = roundNumber)) +
     geom_rug(colour = "steelblue", alpha = 0.6) +
     geom_histogram(colour = "steelblue", fill = "steelblue", alpha = 0.2, bins = 30) +
-    labs(x = "round", y = "no. of skipped rounds", title = title) +
+    labs(x = "round", y = "no. of skipped rounds") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -177,7 +185,7 @@ participationNhoodHistFig <- function(dat) {
     geom_col(alpha = 0.2, position = "identity") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     scale_fill_manual(name = NULL, values = c("steelblue", "goldenrod")) +
-    labs(x = "number of win events", y = "no. nhoods with given wins") +
+    labs(x = "number of win events", y = "number of nhoods with given wins") +
     theme_bw(base_size = 16)
 }
 
@@ -219,6 +227,37 @@ rewardNhoodFig <- function(dat) {
     geom_step(colour = "steelblue") +
     labs(x = "neighbourhoods", y = "sum of rewards") +
     #scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    theme_bw(base_size = 16) +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+}
+
+
+nodesPerNhoodFig <- function(dat, log.y = TRUE) {
+  dat %>%
+    nodesPerNhood() %>%
+    count(nhood) %>%
+    arrange(n) %>%
+    rowid_to_column("rank") %>%
+    ggplot(aes(x = rank, y = n)) +
+    geom_step(colour = "steelblue") +
+    labs(x = "neighbourhoods", y = "number of nodes") +
+    { if (log.y) scale_y_log10() else scale_y_continuous() } +
+    theme_bw(base_size = 16)
+}
+
+
+honestPerNhoodFig <- function(dat) {
+  dat %>%
+    select(roundNumber, event, nhood) %>%
+    left_join(revealersPerRound(dat), by = "roundNumber") %>%
+    group_by(nhood) %>%
+    summarise(m = mean(`honest revealers`)) %>%
+    ungroup() %>%
+    arrange(m) %>%
+    rowid_to_column("rank") %>%
+    ggplot(aes(x = rank, y = m)) +
+    geom_step(colour = "steelblue") +
+    labs(x = "neighbourhoods", y = "mean number of honest revealers") +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }

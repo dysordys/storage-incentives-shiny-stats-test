@@ -246,18 +246,22 @@ nodesPerNhoodFig <- function(dat, log.y = TRUE) {
 }
 
 
-honestPerNhoodFig <- function(dat) {
+revealersPerNhoodFig <- function(dat) {
   dat %>%
     select(roundNumber, event, nhood) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
+    mutate(`inaccurate revealers` = `number of revealers` - `honest revealers`) %>%
     group_by(nhood) %>%
-    summarise(m = mean(`honest revealers`)) %>%
+    summarise(mh = mean(`honest revealers`), md = mean(`inaccurate revealers`)) %>%
     ungroup() %>%
-    arrange(m) %>%
+    arrange(mh) %>%
     rowid_to_column("rank") %>%
-    ggplot(aes(x = rank, y = m)) +
-    geom_step(colour = "steelblue") +
-    labs(x = "neighbourhoods", y = "mean number of honest revealers") +
+    pivot_longer(cols = c(mh, md)) %>%
+    mutate(`revealer type` = recode(name, "mh" = "honest", "md" = "inaccurate")) %>%
+    ggplot(aes(x = rank, y = value, colour = `revealer type`)) +
+    geom_step() +
+    labs(x = "neighbourhoods", y = "mean number of revealers") +
+    scale_colour_manual(values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }

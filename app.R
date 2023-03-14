@@ -113,9 +113,9 @@ ui <- fluidPage(
           )
         ),
         tabPanel(
-          title = "Honest revealers per node",
+          title = "Revealers per node",
           verticalLayout(
-            plotOutput("outHonestPerNhoodFig")
+            plotOutput("outRevealersPerNhoodFig")
           )
         )
       )
@@ -183,8 +183,8 @@ server <- function(input, output) {
   output$outNodesPerNhoodFig <- renderPlot(
     nodesPerNhoodFig(dat, log.y = input$nodesFigLogY)
   )
-  output$outHonestPerNhoodFig <- renderPlot(
-    honestPerNhoodFig(dat)
+  output$outRevealersPerNhoodFig <- renderPlot(
+    revealersPerNhoodFig(dat)
   )
 }
 

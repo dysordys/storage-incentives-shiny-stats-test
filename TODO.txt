@@ -5,3 +5,5 @@
 - In roundsFig: no label if error, not enough data, or similar problems
 
 - In reward per nhood figure: predicted curve
+
+- Null uniform results: I think 0 should be excluded and the null distribution restricted to positive arguments only (e.g., the number of neighborhoods will always be positive)

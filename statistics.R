@@ -79,8 +79,10 @@ skippedRounds <- function(dat) {
 
 
 nhoodBinStr <- function(overlay, depth = 8L) {
-  numHexDigits <- ceiling(depth / 4) # 4: four bits = 1 hex digit
-  str_sub(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
+  if (!is.na(depth) & depth > 0) {
+    numHexDigits <- ceiling(depth / 4) # 4: four bits = 1 hex digit
+    str_sub(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
+  } else NA
 }
 
 
@@ -117,18 +119,19 @@ rewardNhoodDistr <- function(dat) {
 }
 
 
-participationNhoodQuantileNull <- function(p, rounds, nhoods) {
+unifQuantileNull <- function(p, rounds, nhoods) {
   qbinom(p, size = rounds, prob = 1 / nhoods)
 }
 
 
-participationNhoodDistrNull <- function(x, rounds, nhoods) {
+unifDistrNull <- function(x, rounds, nhoods) {
   dbinom(x, size = rounds, prob = 1 / nhoods)
 }
 
 
 nodesPerNhood <- function(dat) {
   dat %>%
+    filter(!is.na(nhood)) %>%
     group_by(nhood) %>%
     count(overlay) %>%
     ungroup()
@@ -178,14 +181,16 @@ participationNhoodHistFig <- function(dat) {
   dat %>%
     rewardNhoodDistr() %>%
     count(winEvents, name = "observed") %>%
-    mutate(predicted = participationNhoodDistrNull(winEvents, rounds, nhoods) *
-             sum(observed)) %>%
+    right_join(tibble(winEvents = 0:max(.$winEvents)), by = "winEvents") %>%
+    mutate(predicted = unifDistrNull(winEvents, rounds, nhoods) *
+             sum(observed, na.rm = TRUE)) %>%
     pivot_longer(cols = !winEvents) %>%
-    ggplot(aes(x = winEvents, y = value, colour = name, fill = name)) +
-    geom_col(alpha = 0.2, position = "identity") +
+    ggplot(aes(x = winEvents, y = value, colour = name, fill = name, alpha = name)) +
+    geom_col(position = "identity", na.rm = TRUE) +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     scale_fill_manual(name = NULL, values = c("steelblue", "goldenrod")) +
-    labs(x = "number of win events", y = "number of nhoods with given wins") +
+    scale_alpha_manual(name = NULL, values = c(0.2, 0.1)) +
+    labs(x = "number of win events", y = "number of nhoods with given # of wins") +
     theme_bw(base_size = 16)
 }
 
@@ -199,7 +204,7 @@ participationNhoodQuantileFig <- function(dat) {
     rowid_to_column("rank") %>%
     left_join(tibble(
       rank = 1:nhoods,
-      predict = participationNhoodQuantileNull(seq(0.1, 0.99, l=nhoods), rounds, nhoods)
+      predict = unifQuantileNull(seq(0.1, 0.99, l=nhoods), rounds, nhoods)
     ), by = "rank") %>%
     pivot_longer(cols = c(winEvents, predict)) %>%
     mutate(name = recode(name, "winEvents" = "observed", "predict" = "predicted")) %>%
@@ -220,9 +225,9 @@ rewardNhoodFig <- function(dat) {
     rename(observed = totalReward) %>%
     arrange(observed) %>%
     rowid_to_column("rank") %>%
-    #mutate(predicted = participationNhoodQuantileNull(seq(0.1, 0.99, l=nrow(.)), rounds,
-    #                                                  nhoods) * mean(observed)) %>%
-    #pivot_longer(cols = c(observed, predicted)) %>%
+    # mutate(predicted = unifQuantileNull(seq(0.1, 0.99, l=nrow(.)), rounds,
+    #                                     nhoods) * mean(observed)) %>%
+    # pivot_longer(cols = c(observed, predicted)) %>%
     ggplot(aes(x = rank, y = observed)) +
     geom_step(colour = "steelblue") +
     labs(x = "neighbourhoods", y = "sum of rewards") +
@@ -232,21 +237,52 @@ rewardNhoodFig <- function(dat) {
 }
 
 
-nodesPerNhoodFig <- function(dat, log.y = TRUE) {
+nodesPerNhoodHistFig <- function(dat) {
+  nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
+  nodes <- dat %>% nodesPerNhood() %>% count(nhood) %>% pull(n) %>% sum()
   dat %>%
     nodesPerNhood() %>%
-    count(nhood) %>%
-    arrange(n) %>%
-    rowid_to_column("rank") %>%
-    ggplot(aes(x = rank, y = n)) +
-    geom_step(colour = "steelblue") +
-    labs(x = "neighbourhoods", y = "number of nodes") +
-    { if (log.y) scale_y_log10() else scale_y_continuous() } +
+    count(nhood, name = "num") %>%
+    count(num) %>%
+    right_join(tibble(num = 0:max(.$num)), by = "num") %>%
+    mutate(predict = unifDistrNull(num, nodes, nhoods) * sum(n, na.rm = TRUE)) %>%
+    pivot_longer(cols = !num) %>%
+    mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
+    ggplot(aes(x = num, y = value, colour = name, fill = name, alpha = name)) +
+    geom_col(position = "identity", na.rm = TRUE) +
+    scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    scale_fill_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    scale_alpha_manual(name = NULL, values = c(0.2, 0.1)) +
+    labs(x = "number of nodes", y = "number of nhoods with given # of nodes") +
     theme_bw(base_size = 16)
 }
 
 
-revealersPerNhoodFig <- function(dat) {
+nodesPerNhoodQuantileFig <- function(dat) {
+  nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
+  nodesTab <- dat %>%
+    nodesPerNhood() %>%
+    count(nhood) %>%
+    arrange(n) %>%
+    rowid_to_column("rank")
+  nodes <- sum(nodesTab$n)
+  nodesTab %>%
+    left_join(tibble(
+      rank = 1:nhoods,
+      predict = unifQuantileNull(seq(0.1, 0.99, l=nhoods), nodes, nhoods)
+    ), by = "rank") %>%
+    pivot_longer(cols = c(n, predict)) %>%
+    mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
+    ggplot(aes(x = rank, y = value, colour = name)) +
+    geom_step() +
+    labs(x = "neighbourhoods", y = "number of nodes") +
+    scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
+    theme_bw(base_size = 16) +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+}
+
+
+revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
   dat %>%
     select(roundNumber, event, nhood) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
@@ -254,12 +290,12 @@ revealersPerNhoodFig <- function(dat) {
     group_by(nhood) %>%
     summarise(mh = mean(`honest revealers`), md = mean(`inaccurate revealers`)) %>%
     ungroup() %>%
-    arrange(mh) %>%
+    arrange(if (sortByHonest) mh else md) %>%
     rowid_to_column("rank") %>%
     pivot_longer(cols = c(mh, md)) %>%
     mutate(`revealer type` = recode(name, "mh" = "honest", "md" = "inaccurate")) %>%
     ggplot(aes(x = rank, y = value, colour = `revealer type`)) +
-    geom_step() +
+    geom_line() +
     labs(x = "neighbourhoods", y = "mean number of revealers") +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +

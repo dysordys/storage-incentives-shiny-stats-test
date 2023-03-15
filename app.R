@@ -106,15 +106,19 @@ ui <- fluidPage(
         tabPanel(
           title = "Nodes per neighbourhood",
           verticalLayout(
-            radioButtons(inputId = "nodesFigLogY", label = NULL, selected = TRUE,
-                         choices = c("Linear y-axis" = FALSE,
-                                     "Logarithmic y-axis" = TRUE)),
+            radioButtons(inputId = "nodesFigChoice", label = NULL,
+                         choices = c("Number of nodes across neighbourhoods" = TRUE,
+                                     "Distribution of number of nodes" = FALSE)),
             plotOutput("outNodesPerNhoodFig")
           )
         ),
         tabPanel(
           title = "Revealers per node",
           verticalLayout(
+            radioButtons(inputId = "revealerSortType",
+                         label = "Sort neighbourhoods in increasing order of:",
+                         choices = c("Honest revealers" = TRUE,
+                                     "Inaccurate revealers" = FALSE)),
             plotOutput("outRevealersPerNhoodFig")
           )
         )
@@ -174,17 +178,28 @@ server <- function(input, output) {
       rewardDistrFig(log.y = input$rewardFigLogY)
   )
   output$outWinNhoodFig <- renderPlot(
-    if (input$winNhoodChoice) participationNhoodQuantileFig(dat) else
-      participationNhoodHistFig(dat)
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      { if (input$winNhoodChoice) participationNhoodQuantileFig(.) else
+        participationNhoodHistFig(.)
+      }
   )
   output$outRewardNhoodFig <- renderPlot(
-    rewardNhoodFig(dat)
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      rewardNhoodFig()
   )
   output$outNodesPerNhoodFig <- renderPlot(
-    nodesPerNhoodFig(dat, log.y = input$nodesFigLogY)
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      { if (input$nodesFigChoice) nodesPerNhoodQuantileFig(.) else
+        nodesPerNhoodHistFig(.)
+      }
   )
   output$outRevealersPerNhoodFig <- renderPlot(
-    revealersPerNhoodFig(dat)
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      revealersPerNhoodFig(input$revealerSortType)
   )
 }
 
@@ -193,10 +208,8 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 
 # fetchJsonAll(minRound = max(dat$roundNumber)) %>%
-#   cleanData(jsonDat) %>%
+#   cleanData() %>%
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 
-# tictoc::tic()
-# downloadAllData() %>% write_rds("data.rds", compress = "xz")
-# tictoc::toc()
+# tictoc::tic(); downloadAllData() %>% write_rds("data.rds",compress="xz"); tictoc::toc()

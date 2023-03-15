@@ -1,7 +1,6 @@
 # Ideas for stats dashboard
 #
 # What is the distribution of number of overlays (nodes) per neighborhood?
-#  * distribution of honest revealers per neighborhood
 #  * distribution of playing and staked nodes per neighborhood
 #  * distribution of 'dishonest' nodes per neighborhood
 #
@@ -61,13 +60,16 @@ ui <- fluidPage(
         tabPanel(
           title = "Figure",
           verticalLayout(
-            textOutput("outChiSqUnifTxt"),
+            textOutput("outChiSqUnifTxt1"),
             plotOutput("outSkippedFig")
           )
         ),
         tabPanel(
           title = "Table",
-          verticalLayout(tableOutput("outSkippedTab"))
+          verticalLayout(
+            textOutput("outChiSqUnifTxt2"),
+            tableOutput("outSkippedTab")
+          )
         )
       )
     ),
@@ -123,6 +125,12 @@ ui <- fluidPage(
           )
         )
       )
+    ),
+    tabPanel(
+      title = "Stakes",
+      verticalLayout(
+        plotOutput("outStakesNhoodFig")
+      )
     )
   )
 )
@@ -144,20 +152,15 @@ server <- function(input, output) {
       } %>%
       rename(round = roundNumber)
   )
-  output$outChiSqUnifTxt <- renderText(
+  output$outChiSqUnifTxt1 <- renderText(
     dat %>%
       restrictRounds(input$roundRange) %>%
-      pull(roundNumber) %>%
-      chisqUnif() %>%
-      `$`(p.value) %>%
-      round(5) %>%
-      str_c("Chi-squared test of uniformity: p = ", ., " ", case_when(
-        . < 0.01 ~ "(i.e., skipped rounds are not uniformly distributed)",
-        . < 0.05 ~ "(i.e., skipped rounds are unlikely to be uniformly distributed)",
-        . < 0.1  ~ str_c("(i.e., skipped rounds may not be uniformly distributed, ",
-                         "but it is difficult to say)"),
-        TRUE ~ "(i.e., assumption of uniformity cannot be rejected)",
-      ))
+      chisqUnifMissedRounds()
+  )
+  output$outChiSqUnifTxt2 <- renderText(
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      chisqUnifMissedRounds()
   )
   output$outSkippedFig <- renderPlot(
     dat %>%
@@ -200,6 +203,11 @@ server <- function(input, output) {
     dat %>%
       restrictRounds(input$roundRange) %>%
       revealersPerNhoodFig(input$revealerSortType)
+  )
+  output$outStakesNhoodFig <- renderPlot(
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      stakesNhoodFig()
   )
 }
 

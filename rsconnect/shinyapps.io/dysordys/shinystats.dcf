@@ -5,10 +5,10 @@ account: dysordys
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8446051
-bundleId: 6961015
+bundleId: 6962020
 url: https://dysordys.shinyapps.io/shinystats/
-when: 1678886947.56153
-lastSyncTime: 1678886947.56154
+when: 1678899039.62404
+lastSyncTime: 1678899039.62405
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: dropbox_conn.R|experiment.R|TODO.txt|unit_tests/test_price_model.R

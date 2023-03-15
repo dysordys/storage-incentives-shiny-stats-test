@@ -70,6 +70,19 @@ chisqUnif <- function(vec) {
 }
 
 
+chisqUnifMissedRounds <- function(dat) {
+    chisqUnif(pull(dat, roundNumber))$p.value %>%
+    round(5) %>%
+    str_c("Chi-squared test of uniformity: p = ", ., " ", case_when(
+      . < 0.01 ~ "(i.e., skipped rounds are not uniformly distributed)",
+      . < 0.05 ~ "(i.e., skipped rounds are unlikely to be uniformly distributed)",
+      . < 0.1  ~ str_c("(i.e., skipped rounds may not be uniformly distributed, ",
+                       "but it is difficult to say)"),
+      TRUE ~ "(i.e., assumption of uniformity cannot be rejected)",
+    ))
+}
+
+
 skippedRounds <- function(dat) {
   dat %>%
     filter(event == "won") %>%
@@ -114,7 +127,9 @@ rewardNhoodDistr <- function(dat) {
   dat %>%
     filter(event == "won", !is.na(nhood)) %>%
     group_by(nhood) %>%
-    summarise(winEvents = n(), totalReward = sum(rewardAmount)) %>%
+    summarise(winEvents = n(),
+              totalReward = sum(rewardAmount),
+              totalStake = sum(stake)) %>%
     ungroup()
 }
 
@@ -181,7 +196,7 @@ participationNhoodHistFig <- function(dat) {
   dat %>%
     rewardNhoodDistr() %>%
     count(winEvents, name = "observed") %>%
-    right_join(tibble(winEvents = 0:max(.$winEvents)), by = "winEvents") %>%
+    right_join(tibble(winEvents = 1:max(.$winEvents)), by = "winEvents") %>%
     mutate(predicted = unifDistrNull(winEvents, rounds, nhoods) *
              sum(observed, na.rm = TRUE)) %>%
     pivot_longer(cols = !winEvents) %>%
@@ -218,8 +233,8 @@ participationNhoodQuantileFig <- function(dat) {
 
 
 rewardNhoodFig <- function(dat) {
-  rounds <- length(unique(dat$roundNumber))
-  nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
+  #rounds <- length(unique(dat$roundNumber))
+  #nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
   dat %>%
     rewardNhoodDistr() %>%
     rename(observed = totalReward) %>%
@@ -244,7 +259,7 @@ nodesPerNhoodHistFig <- function(dat) {
     nodesPerNhood() %>%
     count(nhood, name = "num") %>%
     count(num) %>%
-    right_join(tibble(num = 0:max(.$num)), by = "num") %>%
+    right_join(tibble(num = 1:max(.$num)), by = "num") %>%
     mutate(predict = unifDistrNull(num, nodes, nhoods) * sum(n, na.rm = TRUE)) %>%
     pivot_longer(cols = !num) %>%
     mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
@@ -298,6 +313,21 @@ revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
     geom_line() +
     labs(x = "neighbourhoods", y = "mean number of revealers") +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
+    theme_bw(base_size = 16) +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+}
+
+
+stakesNhoodFig <- function(dat) {
+  dat %>%
+    rewardNhoodDistr() %>%
+    rename(observed = totalStake) %>%
+    arrange(observed) %>%
+    rowid_to_column("rank") %>%
+    ggplot(aes(x = rank, y = observed)) +
+    geom_step(colour = "steelblue") +
+    labs(x = "neighbourhoods", y = "sum of stakes") +
+    scale_y_log10() +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }

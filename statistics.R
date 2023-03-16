@@ -1,9 +1,10 @@
 adjustPrice <- function(currentPrice, redundancy) {
   minimumPrice <- 2^10
-  increaseRate <- c(1036, 1027, 1025, 1024, 1023, 1021, 1017, 1012)
+  #increaseRate <- c(1036, 1027, 1025, 1024, 1023, 1021, 1017, 1012)
+  increaseRate <- c(1036, 1031, 1027, 1025, 1024, 1023, 1021, 1017, 1012)
   targetRedundancy <- 4
   maxConsideredExtraRedundancy <- 4
-  usedRedundancy <- min(redundancy, targetRedundancy + maxConsideredExtraRedundancy)
+  usedRedundancy <- min(redundancy, targetRedundancy + maxConsideredExtraRedundancy) + 1
   max((increaseRate[usedRedundancy] * currentPrice) / minimumPrice, minimumPrice)
 }
 
@@ -49,8 +50,9 @@ revealersPerRound <- function(dat) {
 
 
 pricePerRound <- function(dat, initPrice = 2048) {
-  dat %>%
-    revealersPerRound() %>%
+  tibble(roundNumber = min(dat$roundNumber):max(dat$roundNumber)) %>%
+    left_join(revealersPerRound(dat), by = "roundNumber") %>%
+    mutate(`honest revealers` = replace_na(`honest revealers`, 0)) %>%
     mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
     transmute(`roundNumber`,
               `price (in units of the initial value)` = price / initPrice,

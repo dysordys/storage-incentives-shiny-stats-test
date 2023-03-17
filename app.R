@@ -35,7 +35,7 @@ ui <- fluidPage(
     sliderInput(inputId = "roundRange",
                 label = "Range of rounds",
                 min = min(dat$roundNumber), max = max(dat$roundNumber),
-                value = range(dat$roundNumber), width = "80%"),
+                value = range(dat$roundNumber), width = "90%"),
     tabPanel(
       title = "Price",
       tabsetPanel(
@@ -46,9 +46,10 @@ ui <- fluidPage(
         tabPanel(
           title = "Table",
           verticalLayout(
-            radioButtons(inputId = "dishonestFilter", label = NULL,
+            radioButtons(inputId = "inaccFilt", label = NULL,
                          choices = c("Show all rounds",
                                      "Show only rounds with inaccurate revealers")),
+            textOutput("outInacc"),
             tableOutput("outPriceTab")
           )
         )
@@ -129,6 +130,9 @@ ui <- fluidPage(
     tabPanel(
       title = "Stakes",
       verticalLayout(
+        radioButtons(inputId = "stakesFigChoice", label = NULL,
+                     choices = c("Sum of stakes across neighbourhoods" = TRUE,
+                                 "Distribution of sum of stakes" = FALSE)),
         plotOutput("outStakesNhoodFig")
       )
     )
@@ -141,16 +145,28 @@ server <- function(input, output) {
   output$outPriceFig <- renderPlot(
     dat %>%
       pricePerRound() %>%
+      mutate(inaccurate = revealers - honest) %>%
+      mutate(price = price / first(price)) %>%
       restrictRounds(input$roundRange) %>%
       priceFig()
   )
-  output$outPriceTab <- renderTable(
-    pricePerRound(dat) %>%
+  output$outInacc <- renderText({
+    s <- dat %>%
       restrictRounds(input$roundRange) %>%
-      { if (input$dishonestFilter == "Show all rounds") . else
-        filter(., `inaccurate revealers` > 0)
-      } %>%
-      rename(round = roundNumber)
+      inaccurateRevealerStats()
+    str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
+          ", or ", round(100 * s$p, 4), "%")
+  })
+  output$outPriceTab <- renderTable(
+    dat %>%
+      pricePerRound() %>%
+      mutate(inaccurate = revealers - honest, price = price / first(price)) %>%
+      { if (input$inaccFilt == "Show all rounds") . else filter(., inaccurate > 0) } %>%
+      restrictRounds(input$roundRange) %>%
+      transmute(round = roundNumber,
+                `price (in units of the initial value)` = price,
+                `number of revealers` = revealers,
+                `inaccurate revealers` = inaccurate)
   )
   output$outChiSqUnifTxt1 <- renderText(
     dat %>%
@@ -207,7 +223,9 @@ server <- function(input, output) {
   output$outStakesNhoodFig <- renderPlot(
     dat %>%
       restrictRounds(input$roundRange) %>%
-      stakesNhoodFig()
+      { if (input$stakesFigChoice) stakesNhoodQuantileFig(.) else
+        stakesNhoodHistFig(.)
+      }
   )
 }
 

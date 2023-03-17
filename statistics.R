@@ -1,11 +1,10 @@
-adjustPrice <- function(currentPrice, redundancy) {
+adjustPrice <- function(currentPrice, honestRevealers) {
   minimumPrice <- 2^10
-  #increaseRate <- c(1036, 1027, 1025, 1024, 1023, 1021, 1017, 1012)
-  increaseRate <- c(1036, 1031, 1027, 1025, 1024, 1023, 1021, 1017, 1012)
+  increaseRate <- c(1036, 1031, 1027, 1025, 1024, 1023, 1021, 1017, 1012) / minimumPrice
   targetRedundancy <- 4
   maxConsideredExtraRedundancy <- 4
-  usedRedundancy <- min(redundancy, targetRedundancy + maxConsideredExtraRedundancy) + 1
-  max((increaseRate[usedRedundancy] * currentPrice) / minimumPrice, minimumPrice)
+  usedRedundancy <- min(honestRevealers, targetRedundancy + maxConsideredExtraRedundancy)
+  max(increaseRate[usedRedundancy + 1] * currentPrice, minimumPrice)
 }
 
 
@@ -43,8 +42,7 @@ revealersPerRound <- function(dat) {
     group_by(roundNumber) %>%
     mutate(honest = (id == id[event == "won"])) %>%
     filter(event == "revealed") %>%
-    summarise(`number of revealers` = n(),
-              `honest revealers` = sum(honest)) %>%
+    summarise(revealers = n(), honest = sum(honest)) %>%
     ungroup()
 }
 
@@ -52,18 +50,22 @@ revealersPerRound <- function(dat) {
 pricePerRound <- function(dat, initPrice = 2048) {
   tibble(roundNumber = min(dat$roundNumber):max(dat$roundNumber)) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
-    mutate(`honest revealers` = replace_na(`honest revealers`, 0)) %>%
-    mutate(price = accumPrice(`honest revealers`, initPrice)) %>%
-    transmute(`roundNumber`,
-              `price (in units of the initial value)` = price / initPrice,
-              `number of revealers`,
-              `inaccurate revealers` = `number of revealers` - `honest revealers`)
+    mutate(honest = replace_na(honest, 0)) %>%
+    mutate(price = accumPrice(honest, initPrice))
 }
 
 
 missedRounds <- function(dat) {
   tibble(roundNumber = min(dat$roundNumber):max(dat$roundNumber)) %>%
     anti_join(distinct(select(dat, roundNumber)), by = "roundNumber")
+}
+
+
+inaccurateRevealerStats <- function(dat) {
+  tab <- dat %>% pricePerRound()
+  rounds <- nrow(tab)
+  roundsWithInaccurates <- nrow(filter(tab, revealers != honest))
+  list(rounds = rounds, n = roundsWithInaccurates, p = roundsWithInaccurates / rounds)
 }
 
 
@@ -158,9 +160,9 @@ nodesPerNhood <- function(dat) {
 priceFig <- function(dat, maxPoints = 3001) {
   dat %>%
     filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
-    ggplot(aes(x = roundNumber, y = `price (in units of the initial value)`)) +
+    ggplot(aes(x = roundNumber, y = price)) +
     geom_line(colour = "steelblue") +
-    labs(x = "round") +
+    labs(x = "round", y = "price (in units of the initial value)") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -235,20 +237,14 @@ participationNhoodQuantileFig <- function(dat) {
 
 
 rewardNhoodFig <- function(dat) {
-  #rounds <- length(unique(dat$roundNumber))
-  #nhoods <- length(unique(dat$nhood[!is.na(dat$nhood)]))
   dat %>%
     rewardNhoodDistr() %>%
     rename(observed = totalReward) %>%
     arrange(observed) %>%
     rowid_to_column("rank") %>%
-    # mutate(predicted = unifQuantileNull(seq(0.1, 0.99, l=nrow(.)), rounds,
-    #                                     nhoods) * mean(observed)) %>%
-    # pivot_longer(cols = c(observed, predicted)) %>%
     ggplot(aes(x = rank, y = observed)) +
     geom_step(colour = "steelblue") +
     labs(x = "neighbourhoods", y = "sum of rewards") +
-    #scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }
@@ -301,7 +297,6 @@ nodesPerNhoodQuantileFig <- function(dat) {
 
 revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
   dat %>%
-    select(roundNumber, event, nhood) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(`inaccurate revealers` = `number of revealers` - `honest revealers`) %>%
     group_by(nhood) %>%
@@ -320,7 +315,19 @@ revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
 }
 
 
-stakesNhoodFig <- function(dat) {
+stakesNhoodHistFig <- function(dat) {
+  dat %>%
+    rewardNhoodDistr() %>%
+    rename(observed = totalStake) %>%
+    ggplot(aes(x = observed)) +
+    geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 80) +
+    labs(x = "sum of stakes") +
+    scale_x_log10() +
+    theme_bw(base_size = 16)
+}
+
+
+stakesNhoodQuantileFig <- function(dat) {
   dat %>%
     rewardNhoodDistr() %>%
     rename(observed = totalStake) %>%

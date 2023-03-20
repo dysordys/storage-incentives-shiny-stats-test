@@ -1,23 +1,3 @@
-# Ideas for stats dashboard
-#
-# What is the distribution of number of overlays (nodes) per neighborhood?
-#  * distribution of playing and staked nodes per neighborhood
-#  * distribution of 'dishonest' nodes per neighborhood
-#
-# Staking
-#  * Distribution of staked nodes not playing
-#  * Distribution of stakes by neighborhood
-#
-# Other
-#  * In the last x rounds, what was the average number of revealers by round
-#  * Skipped rounds distribution over time
-#  * Distribution of reported depth and are there any seeming anomalies
-#  * How often are 'honest' nodes misreporting their rc
-#  * How many rounds are controversial (have some disagreement in hashes)
-#  * Distribution of freezes over time (how many nodes frozen at any given point)
-#  * Distribution of freezes over neighborhoods
-#  * Distribution of anchors
-
 library(shiny)
 library(tidyverse)
 
@@ -96,9 +76,12 @@ ui <- fluidPage(
           )
         ),
         tabPanel(
-          title = "Total reward across neighbourhoods",
+          title = "Total reward",
           verticalLayout(
-            plotOutput("outRewardNhoodFig")
+            radioButtons(inputId = "totalRewardChoice", label = NULL,
+                         choices = c("Total reward across neighbourhoods" = TRUE,
+                                     "Total reward across nodes" = FALSE)),
+            plotOutput("outRewardAcrossFig")
           )
         )
       )
@@ -142,14 +125,14 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  output$outPriceFig <- renderPlot(
+  output$outPriceFig <- renderPlot({
     dat %>%
       pricePerRound() %>%
       mutate(inaccurate = revealers - honest) %>%
       mutate(price = price / first(price)) %>%
       restrictRounds(input$roundRange) %>%
       priceFig()
-  )
+  })
   output$outInacc <- renderText({
     s <- dat %>%
       restrictRounds(input$roundRange) %>%
@@ -157,7 +140,7 @@ server <- function(input, output) {
     str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
           ", or ", round(100 * s$p, 4), "%")
   })
-  output$outPriceTab <- renderTable(
+  output$outPriceTab <- renderTable({
     dat %>%
       pricePerRound() %>%
       mutate(inaccurate = revealers - honest, price = price / first(price)) %>%
@@ -167,66 +150,66 @@ server <- function(input, output) {
                 `price (in units of the initial value)` = price,
                 `number of revealers` = revealers,
                 `inaccurate revealers` = inaccurate)
-  )
-  output$outChiSqUnifTxt1 <- renderText(
+  })
+  output$outChiSqUnifTxt1 <- renderText({
     dat %>%
       restrictRounds(input$roundRange) %>%
       chisqUnifMissedRounds()
-  )
-  output$outChiSqUnifTxt2 <- renderText(
+  })
+  output$outChiSqUnifTxt2 <- renderText({
     dat %>%
       restrictRounds(input$roundRange) %>%
       chisqUnifMissedRounds()
-  )
-  output$outSkippedFig <- renderPlot(
+  })
+  output$outSkippedFig <- renderPlot({
     dat %>%
       missedRounds() %>%
       restrictRounds(input$roundRange) %>%
       roundsFig()
-  )
-  output$outSkippedTab <- renderTable(
+  })
+  output$outSkippedTab <- renderTable({
     missedRounds(dat) %>%
       restrictRounds(input$roundRange) %>%
       rename(`Skipped rounds:` = roundNumber)
-  )
-  output$outRewardFig <- renderPlot(
+  })
+  output$outRewardFig <- renderPlot({
     dat %>%
       skippedRounds() %>%
       mutate(skip = as_factor(skip)) %>%
       restrictRounds(input$roundRange) %>%
       rewardDistrFig(log.y = input$rewardFigLogY)
-  )
-  output$outWinNhoodFig <- renderPlot(
+  })
+  output$outWinNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
       { if (input$winNhoodChoice) participationNhoodQuantileFig(.) else
         participationNhoodHistFig(.)
       }
-  )
-  output$outRewardNhoodFig <- renderPlot(
+  })
+  output$outRewardAcrossFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
-      rewardNhoodFig()
-  )
-  output$outNodesPerNhoodFig <- renderPlot(
+      { if (input$totalRewardChoice) rewardNhoodFig(.) else rewardPerNodeFig(.) }
+  })
+  output$outNodesPerNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
       { if (input$nodesFigChoice) nodesPerNhoodQuantileFig(.) else
         nodesPerNhoodHistFig(.)
       }
-  )
-  output$outRevealersPerNhoodFig <- renderPlot(
+  })
+  output$outRevealersPerNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
       revealersPerNhoodFig(input$revealerSortType)
-  )
-  output$outStakesNhoodFig <- renderPlot(
+  })
+  output$outStakesNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
       { if (input$stakesFigChoice) stakesNhoodQuantileFig(.) else
         stakesNhoodHistFig(.)
       }
-  )
+  })
 }
 
 
@@ -238,4 +221,4 @@ shinyApp(ui = ui, server = server)
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 
-# tictoc::tic(); downloadAllData() %>% write_rds("data.rds",compress="xz"); tictoc::toc()
+# tictoc::tic(); write_rds(downloadAllData(), "data.rds", compress = "xz"); tictoc::toc()

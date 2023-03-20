@@ -1,10 +1,12 @@
 adjustPrice <- function(currentPrice, honestRevealers) {
   minimumPrice <- 2^10
-  increaseRate <- c(1036, 1031, 1027, 1025, 1024, 1023, 1021, 1017, 1012) / minimumPrice
+  v <- 0.00294
+  #increaseRate <- c(1036, 1031, 1027, 1025, 1024, 1023, 1021, 1017, 1012) / minimumPrice
   targetRedundancy <- 4
   maxConsideredExtraRedundancy <- 4
   usedRedundancy <- min(honestRevealers, targetRedundancy + maxConsideredExtraRedundancy)
-  max(increaseRate[usedRedundancy + 1] * currentPrice, minimumPrice)
+  #max(increaseRate[usedRedundancy + 1] * currentPrice, minimumPrice)
+  max(currentPrice * 2^(v * (targetRedundancy - usedRedundancy)), minimumPrice)
 }
 
 
@@ -75,7 +77,7 @@ chisqUnif <- function(vec) {
 
 
 chisqUnifMissedRounds <- function(dat) {
-    chisqUnif(pull(dat, roundNumber))$p.value %>%
+  chisqUnif(pull(dat, roundNumber))$p.value %>%
     round(5) %>%
     str_c("Chi-squared test of uniformity: p = ", ., " ", case_when(
       . < 0.01 ~ "(i.e., skipped rounds are not uniformly distributed)",
@@ -153,6 +155,15 @@ nodesPerNhood <- function(dat) {
     filter(!is.na(nhood)) %>%
     group_by(nhood) %>%
     count(overlay) %>%
+    ungroup()
+}
+
+
+rewardPerNode <- function(dat) {
+  dat %>%
+    filter(event == "won") %>%
+    group_by(rewardTo) %>%
+    summarise(reward = sum(rewardAmount)) %>%
     ungroup()
 }
 
@@ -298,14 +309,13 @@ nodesPerNhoodQuantileFig <- function(dat) {
 revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
   dat %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
-    mutate(`inaccurate revealers` = `number of revealers` - `honest revealers`) %>%
+    mutate(inaccurate = revealers - honest) %>%
     group_by(nhood) %>%
-    summarise(mh = mean(`honest revealers`), md = mean(`inaccurate revealers`)) %>%
+    summarise(honest = mean(honest), inaccurate = mean(inaccurate)) %>%
     ungroup() %>%
-    arrange(if (sortByHonest) mh else md) %>%
+    arrange(if (sortByHonest) honest else inaccurate) %>%
     rowid_to_column("rank") %>%
-    pivot_longer(cols = c(mh, md)) %>%
-    mutate(`revealer type` = recode(name, "mh" = "honest", "md" = "inaccurate")) %>%
+    pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
     ggplot(aes(x = rank, y = value, colour = `revealer type`)) +
     geom_line() +
     labs(x = "neighbourhoods", y = "mean number of revealers") +
@@ -337,6 +347,20 @@ stakesNhoodQuantileFig <- function(dat) {
     geom_step(colour = "steelblue") +
     labs(x = "neighbourhoods", y = "sum of stakes") +
     scale_y_log10() +
+    theme_bw(base_size = 16) +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+}
+
+
+rewardPerNodeFig <- function(dat) {
+  dat %>%
+    rewardPerNode() %>%
+    arrange(reward) %>%
+    rowid_to_column("rank") %>%
+    ggplot(aes(x = rank, y = reward)) +
+    geom_step(colour = "steelblue") +
+    scale_x_continuous(name = "nodes (sorted in increasing order of total reward)") +
+    scale_y_log10(name = "sum of rewards") +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }

@@ -25,8 +25,6 @@ Other
 
 - In roundsFig: no label if error, not enough data, or similar problems
 
-- In reward per nhood figure: predicted curve
-
-- Null uniform results: I think 0 should be excluded and the null distribution restricted to positive arguments only (e.g., the number of neighborhoods will always be positive)
-
 - Tool to select one day's, week's, or month's worth of rounds from the round range slider
+
+- Am I doing the right thing with the depth distribution? Should I count each overlay only once? (But then there's the problem that some overlays have two different depths associated with them, depending on round.)

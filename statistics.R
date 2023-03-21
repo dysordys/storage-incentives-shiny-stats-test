@@ -168,6 +168,13 @@ rewardPerNode <- function(dat) {
 }
 
 
+depthDistr <- function(dat) {
+  dat %>%
+    filter(!is.na(depth)) %>%
+    count(depth)
+}
+
+
 priceFig <- function(dat, maxPoints = 3001) {
   dat %>%
     filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
@@ -190,11 +197,13 @@ roundsFig <- function(dat) {
 }
 
 
-rewardDistrFig <- function(dat, log.y = TRUE) {
+rewardDistrFig <- function(dat, xrange = c(NA, NA), log.x = TRUE, log.y = TRUE) {
   plt <- dat %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
-    scale_x_log10(name = "reward") +
+    { if (log.x) scale_x_log10(name = "reward", limits = xrange) else
+      scale_x_continuous(name = "reward", limits = xrange)
+    } +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
                       name = "skipped rounds") +
     theme_bw(base_size = 16) +
@@ -363,4 +372,14 @@ rewardPerNodeFig <- function(dat) {
     scale_y_log10(name = "sum of rewards") +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+}
+
+
+depthDistrFig <- function(dat, log.y = TRUE) {
+  dat %>%
+    ggplot(aes(x = as_factor(depth), y = n)) +
+    geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
+    labs(x = "depth", y = "number of nodes") +
+    { if (log.y) scale_y_log10() else scale_y_continuous() } +
+    theme_bw(base_size = 16)
 }

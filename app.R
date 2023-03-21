@@ -14,8 +14,10 @@ ui <- fluidPage(
     title = "View data on:",
     sliderInput(inputId = "roundRange",
                 label = "Range of rounds",
-                min = min(dat$roundNumber), max = max(dat$roundNumber),
-                value = range(dat$roundNumber), width = "90%"),
+                min = min(dat$roundNumber),
+                max = max(dat$roundNumber),
+                value = range(dat$roundNumber),
+                width = "90%"),
     tabPanel(
       title = "Price",
       tabsetPanel(
@@ -60,10 +62,27 @@ ui <- fluidPage(
         tabPanel(
           title = "Reward distribution",
           verticalLayout(
-            radioButtons(inputId = "rewardFigLogY", label = NULL, selected = TRUE,
-                         choices = c("Linear y-axis" = FALSE,
-                                     "Pseudo-logarithmic y-axis" = TRUE)),
-            plotOutput("outRewardFig")
+            splitLayout(
+              radioButtons(inputId = "rewardFigLogX",
+                           label = "x-axis:",
+                           selected = TRUE,
+                           choices = c("Linear" = FALSE,
+                                       "Logarithmic" = TRUE)),
+              radioButtons(inputId = "rewardFigLogY",
+                           label = "y-axis:",
+                           selected = TRUE,
+                           choices = c("Linear" = FALSE,
+                                       "Pseudo-logarithmic" = TRUE))
+            ),
+            plotOutput("outRewardFig"),
+            sliderInput(inputId = "rewardRange",
+                        label = "Range of rewards",
+                        min = 0.9 * min(dat$rewardAmount, na.rm = TRUE),
+                        max = 1.1 * max(dat$rewardAmount, na.rm = TRUE),
+                        value = c(0.9 * min(dat$rewardAmount, na.rm = TRUE),
+                                  1.1 * max(dat$rewardAmount, na.rm = TRUE)),
+                        ticks = FALSE,
+                        width = "90%")
           )
         ),
         tabPanel(
@@ -89,6 +108,25 @@ ui <- fluidPage(
     tabPanel(
       title = "Nodes",
       tabsetPanel(
+        tabPanel(
+          title = "Depths",
+          navbarPage(
+            title = "",
+            tabPanel(
+              title = "Table",
+              tableOutput("outDepthTab")
+            ),
+            tabPanel(
+              title = "Figure",
+              verticalLayout(
+                radioButtons(inputId = "depthFigLogY", label = NULL, selected = TRUE,
+                             choices = c("Linear y-axis" = FALSE,
+                                         "Logarithmic y-axis" = TRUE)),
+                plotOutput("outDepthFig")
+              )
+            )
+          )
+        ),
         tabPanel(
           title = "Nodes per neighbourhood",
           verticalLayout(
@@ -177,7 +215,8 @@ server <- function(input, output) {
       skippedRounds() %>%
       mutate(skip = as_factor(skip)) %>%
       restrictRounds(input$roundRange) %>%
-      rewardDistrFig(log.y = input$rewardFigLogY)
+      rewardDistrFig(xrange = input$rewardRange,
+                     log.x = input$rewardFigLogX, log.y = input$rewardFigLogY)
   })
   output$outWinNhoodFig <- renderPlot({
     dat %>%
@@ -190,6 +229,18 @@ server <- function(input, output) {
     dat %>%
       restrictRounds(input$roundRange) %>%
       { if (input$totalRewardChoice) rewardNhoodFig(.) else rewardPerNodeFig(.) }
+  })
+  output$outDepthTab <- renderTable({
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      depthDistr() %>%
+      rename(`number of nodes` = n)
+  })
+  output$outDepthFig <- renderPlot({
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      depthDistr() %>%
+      depthDistrFig(log.y = input$depthFigLogY)
   })
   output$outNodesPerNhoodFig <- renderPlot({
     dat %>%

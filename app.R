@@ -1,8 +1,8 @@
 library(shiny)
 library(tidyverse)
 
-source("download_clean.R")
 source("statistics.R")
+source("figures.R")
 
 
 dat <- read_rds("data.rds") %>% calculateNhoodsDec()
@@ -22,17 +22,27 @@ ui <- fluidPage(
       title = "Price",
       tabsetPanel(
         tabPanel(
-          title = "Figure",
+          title = "Graph of price change",
           verticalLayout(plotOutput("outPriceFig"))
         ),
         tabPanel(
-          title = "Table",
+          title = "Table of price change and revealers",
           verticalLayout(
             radioButtons(inputId = "inaccFilt", label = NULL,
                          choices = c("Show all rounds",
                                      "Show only rounds with inaccurate revealers")),
             textOutput("outInacc"),
             tableOutput("outPriceTab")
+          )
+        ),
+        tabPanel(
+          title = "Revealers per neighbourhood",
+          verticalLayout(
+            radioButtons(inputId = "revealerSortType",
+                         label = "Sort neighbourhoods in increasing order of:",
+                         choices = c("Honest revealers" = TRUE,
+                                     "Inaccurate revealers" = FALSE)),
+            plotOutput("outRevealersPerNhoodFig")
           )
         )
       )
@@ -135,17 +145,17 @@ ui <- fluidPage(
                                      "Distribution of number of nodes" = FALSE)),
             plotOutput("outNodesPerNhoodFig")
           )
-        ),
-        tabPanel(
-          title = "Revealers per node",
-          verticalLayout(
-            radioButtons(inputId = "revealerSortType",
-                         label = "Sort neighbourhoods in increasing order of:",
-                         choices = c("Honest revealers" = TRUE,
-                                     "Inaccurate revealers" = FALSE)),
-            plotOutput("outRevealersPerNhoodFig")
-          )
-        )
+        )#,
+        # tabPanel(
+        #   title = "Revealers per node",
+        #   verticalLayout(
+        #     radioButtons(inputId = "revealerNodeSortType",
+        #                  label = "Sort neighbourhoods in increasing order of:",
+        #                  choices = c("Honest revealers" = TRUE,
+        #                              "Inaccurate revealers" = FALSE)),
+        #     plotOutput("outRevealersPerNodeFig")
+        #   )
+        # )
       )
     ),
     tabPanel(
@@ -189,6 +199,12 @@ server <- function(input, output) {
                 `number of revealers` = revealers,
                 `inaccurate revealers` = inaccurate)
   })
+  output$outRevealersPerNhoodFig <- renderPlot({
+    dat %>%
+      restrictRounds(input$roundRange) %>%
+      revealerNhoodSummary(.f = mean) %>%
+      revealersPerNhoodFig(input$revealerSortType)
+  })
   output$outChiSqUnifTxt1 <- renderText({
     dat %>%
       restrictRounds(input$roundRange) %>%
@@ -221,14 +237,16 @@ server <- function(input, output) {
   output$outWinNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
-      { if (input$winNhoodChoice) participationNhoodQuantileFig(.) else
-        participationNhoodHistFig(.)
+      { if (input$winNhoodChoice) participationNhoodQuantileFig(winsByNhood(.)) else
+        participationNhoodHistFig(winEventsTab(.))
       }
   })
   output$outRewardAcrossFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
-      { if (input$totalRewardChoice) rewardNhoodFig(.) else rewardPerNodeFig(.) }
+      { if (input$totalRewardChoice) rewardNhoodFig(rewardNhoodDistr(.)) else
+        rewardPerNodeFig(rewardPerNode(.))
+      }
   })
   output$outDepthTab <- renderTable({
     dat %>%
@@ -245,20 +263,21 @@ server <- function(input, output) {
   output$outNodesPerNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
-      { if (input$nodesFigChoice) nodesPerNhoodQuantileFig(.) else
-        nodesPerNhoodHistFig(.)
+      { if (input$nodesFigChoice) nodesPerNhoodQuantileFig(nodesByNhoodRank(.)) else
+        nodesPerNhoodHistFig(nodesByNhood(.))
       }
   })
-  output$outRevealersPerNhoodFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      revealersPerNhoodFig(input$revealerSortType)
-  })
+  # output$outRevealersPerNodeFig <- renderPlot({
+  #   dat %>%
+  #     restrictRounds(input$roundRange) %>%
+  #     revealerNhoodSummary() %>%
+  #     revealersPerNhoodFig(input$revealerNodeSortType)
+  # })
   output$outStakesNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
-      { if (input$stakesFigChoice) stakesNhoodQuantileFig(.) else
-        stakesNhoodHistFig(.)
+      { if (input$stakesFigChoice) stakesNhoodQuantileFig(rewardNhoodDistr(.)) else
+        stakesNhoodHistFig(rewardNhoodDistr(.))
       }
   })
 }
@@ -267,9 +286,10 @@ server <- function(input, output) {
 
 shinyApp(ui = ui, server = server)
 
+# source("download_clean.R")
 # fetchJsonAll(minRound = max(dat$roundNumber)) %>%
 #   cleanData() %>%
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 
-# tictoc::tic(); write_rds(downloadAllData(), "data.rds", compress = "xz"); tictoc::toc()
+# tictoc::tic(); write_rds(downloadAllData(), "data.rds", compress="xz"); tictoc::toc()

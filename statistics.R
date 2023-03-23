@@ -247,3 +247,25 @@ nodesByNhoodRank <- function(dat) {
       predict = unifQuantileNull(seq(0.1, 0.99, l=nhoods(dat)), nodes(dat), nhoods(dat))
     ), by = "rank")
 }
+
+
+roundsWithoutWinner <- function(dat) {
+  dat %>%
+    group_by(roundNumber) %>%
+    summarise(winner = length(event[event == "won"])) %>%
+    ungroup() %>%
+    filter(winner == 0) %>%
+    pull(roundNumber)
+}
+
+
+roundsWithDepthMismatch <- function(dat) {
+  dat %>%
+    filter(event != "committed") %>%
+    group_by(roundNumber) %>%
+    mutate(wdepth = depth[event == "won"]) %>%
+    mutate(eq = depth != wdepth) %>%
+    summarise(diff = sum(eq)) %>%
+    filter(diff != 0) %>%
+    pull(roundNumber)
+}

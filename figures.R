@@ -107,13 +107,15 @@ revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
   dat %>%
     arrange(if (sortByHonest) honest else inaccurate) %>%
     rowid_to_column("rank") %>%
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
-    ggplot(aes(x = rank, y = value, colour = `revealer type`)) +
-    geom_line() +
+    ggplot(aes(x = nhood, y = value, fill = `revealer type`, colour = `revealer type`)) +
+    geom_col(alpha = 0.5) +
     labs(x = "neighbourhoods", y = "mean number of revealers") +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
+    scale_fill_manual(values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8))
 }
 
 

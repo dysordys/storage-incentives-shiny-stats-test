@@ -38,16 +38,14 @@ ui <- fluidPage(
         tabPanel(
           title = "Revealers per neighbourhood",
           verticalLayout(
-            splitLayout(
-              radioButtons(inputId = "revealerSortType",
-                           label = "Sort neighbourhoods in increasing order of:",
-                           choices = c("Honest revealers" = TRUE,
-                                       "Inaccurate revealers" = FALSE)),
-              selectInput(inputId = "revealerNhoodDepth", label = "Depth:",
-                          choices = depthDistr(dat) %>% filter(depth>0) %>% pull(depth),
-                          selected = 8)
-            ),
-            plotOutput("outRevealersPerNhoodFig")
+            radioButtons(inputId = "revealerSortType",
+                         label = "Sort neighbourhoods in increasing order of:",
+                         choices = c("Honest revealers" = TRUE,
+                                     "Inaccurate revealers" = FALSE)),
+            plotOutput("outRevealersPerNhoodFig"),
+            selectInput(inputId = "revealerNhoodDepth", label = "Depth:",
+                        choices = depthDistr(dat) %>% filter(depth>0) %>% pull(depth),
+                        selected = 8)
           )
         )
       )
@@ -207,10 +205,10 @@ server <- function(input, output) {
   output$outRevealersPerNhoodFig <- renderPlot({
     dat %>%
       restrictRounds(input$roundRange) %>%
-      filter(depth == input$revealerNhoodDepth) %>%
+      filter(depth == 8) %>%
       filter(!(roundNumber %in% roundsWithoutWinner(.))) %>%
       revealerNhoodSummary(.f = mean) %>%
-      revealersPerNhoodFig(input$revealerSortType)
+      revealersPerNhoodFig(TRUE)
   })
   output$outChiSqUnifTxt1 <- renderText({
     dat %>%

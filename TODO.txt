@@ -26,5 +26,3 @@ Other
 - In roundsFig: no label if error, not enough data, or similar problems
 
 - Tool to select one day's, week's, or month's worth of rounds from the round range slider
-
-- Am I doing the right thing with the depth distribution? Should I count each overlay only once? (But then there's the problem that some overlays have two different depths associated with them, depending on round.)

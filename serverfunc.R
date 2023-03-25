@@ -13,7 +13,7 @@ outInaccurate <- function(dat, roundRange = NA) {
     restrictRounds(roundRange) %>%
     inaccurateRevealerStats()
   str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
-        ", or ", round(100 * s$p, 4), "%")
+        ", or ", round(100 * s$p, 2), "%")
 }
 
 
@@ -42,22 +42,37 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, revealerNhoodDepth = 8
 
 
 outChiSqUnifTxt <- function(dat, roundRange = NA) {
-  dat %>% restrictRounds(roundRange) %>% chisqUnifMissedRounds()
+  dat %>%
+    restrictRounds(roundRange) %>%
+    chisqUnifMissedRounds()
+}
+
+
+outNumSkipped <- function(dat, roundRange = NA) {
+  datRestricted <- restrictRounds(dat, roundRange)
+  roundsMissed <- nrow(missedRounds(datRestricted))
+  totalRounds <- max(datRestricted$roundNumber) - min(datRestricted$roundNumber) + 1
+  str_c("Skipped rounds: ", roundsMissed, " out of ", totalRounds,
+        ", or ", round(100 * roundsMissed / totalRounds, 2), "%")
 }
 
 
 outSkipped <- function(dat, roundRange = NA) {
-  dat %>% missedRounds() %>% restrictRounds(roundRange)
+  dat %>%
+    missedRounds() %>%
+    restrictRounds(roundRange)
 }
 
 
 outSkippedFig <- function(dat, roundRange = NA) {
-  outSkipped(dat, roundRange) %>% roundsFig()
+  outSkipped(dat, roundRange) %>%
+    roundsFig()
 }
 
 
 outSkippedTab <- function(dat, roundRange = NA) {
-  outSkipped(dat, roundRange) %>% rename(`Skipped rounds:` = roundNumber)
+  outSkipped(dat, roundRange) %>%
+    rename(`Skipped rounds:` = roundNumber)
 }
 
 
@@ -99,22 +114,29 @@ outRewardNhoodFig <- function(dat, roundRange = NA, rewardDepth = 8) {
 
 
 outRewardNodeFig <- function(dat, roundRange = NA) {
-  dat %>% restrictRounds(roundRange) %>% rewardPerNode() %>% rewardPerNodeFig()
+  dat %>%
+    restrictRounds(roundRange) %>%
+    rewardPerNode() %>%
+    rewardPerNodeFig()
 }
 
 
 outDepth <- function(dat, roundRange = NA) {
-  dat %>% restrictRounds(roundRange) %>% depthDistr()
+  dat %>%
+    restrictRounds(roundRange) %>%
+    depthDistr()
 }
 
 
 outDepthTab <- function(dat, roundRange = NA) {
-  outDepth(dat, roundRange) %>% rename(`number of nodes` = n)
+  outDepth(dat, roundRange) %>%
+    rename(`number of nodes` = n)
 }
 
 
 outDepthFig <- function(dat, roundRange = NA, log.y = "Logarithmic y-axis") {
-  outDepth(dat, roundRange) %>% depthDistrFig(log.y = log.y)
+  outDepth(dat, roundRange) %>%
+    depthDistrFig(log.y = log.y)
 }
 
 
@@ -137,15 +159,19 @@ outNodeDistrFig <- function(dat, roundRange = NA, nodeDepth = 8) {
 
 
 outStakes <- function(dat, roundRange = NA, stakeDepth = 8) {
-  restrictRounds(dat, roundRange) %>% filter(depth == stakeDepth) %>% rewardNhoodDistr()
+  restrictRounds(dat, roundRange) %>%
+    filter(depth == stakeDepth) %>%
+    rewardNhoodDistr()
 }
 
 
 outStakesNhoodFig <- function(dat, roundRange = NA, stakeDepth = 8) {
-  outStakes(dat, roundRange, stakeDepth) %>% stakesNhoodQuantileFig()
+  outStakes(dat, roundRange, stakeDepth) %>%
+    stakesNhoodQuantileFig()
 }
 
 
 outStakesNodeFig <- function(dat, roundRange = NA, stakeDepth = 8) {
-  outStakes(dat, roundRange, stakeDepth) %>% stakesNhoodHistFig()
+  outStakes(dat, roundRange, stakeDepth) %>%
+    stakesNhoodHistFig()
 }

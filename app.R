@@ -3,6 +3,7 @@ library(tidyverse)
 
 source("statistics.R")
 source("figures.R")
+source("serverfunc.R")
 
 
 dat <- read_rds("data.rds") %>% calculateNhoodsDec()
@@ -38,35 +39,35 @@ ui <- fluidPage(
         tabPanel(
           title = "Revealers per neighbourhood",
           verticalLayout(
-            radioButtons(inputId = "revealerSortType",
-                         label = "Sort neighbourhoods in increasing order of:",
-                         choices = c("Honest revealers" = TRUE,
-                                     "Inaccurate revealers" = FALSE)),
-            plotOutput("outRevealersPerNhoodFig"),
-            selectInput(inputId = "revealerNhoodDepth", label = "Depth:",
-                        choices = depthDistr(dat) %>% filter(depth>0) %>% pull(depth),
-                        selected = 8)
+            fluidRow(
+              column(width = 2,
+                     selectInput(inputId = "revealerNhoodDepth",
+                                 label = "Depth:",
+                                 choices = filter(depthDistr(dat), depth > 0)$depth,
+                                 selected = 8)),
+              column(width = 6,
+                     sliderInput(inputId = "revealerNhoodFigHeight",
+                                 label = "Figure height",
+                                 min = 200, max = 2000, value = 450,
+                                 round = TRUE, width = "150%")),
+              column(width = 4,
+                     radioButtons(inputId = "revealerSortType",
+                                  label = "Sort neighbourhoods by:",
+                                  choices = c("Honest revealers",
+                                              "Inaccurate revealers",
+                                              "Numerical order")))
+            ),
+            plotOutput("outRevealersPerNhoodFig")
           )
         )
       )
     ),
     tabPanel(
       title = "Skipped rounds",
-      tabsetPanel(
-        tabPanel(
-          title = "Figure",
-          verticalLayout(
-            textOutput("outChiSqUnifTxt1"),
-            plotOutput("outSkippedFig")
-          )
-        ),
-        tabPanel(
-          title = "Table",
-          verticalLayout(
-            textOutput("outChiSqUnifTxt2"),
-            tableOutput("outSkippedTab")
-          )
-        )
+      verticalLayout(
+        textOutput("outChiSqUnifTxt"),
+        plotOutput("outSkippedFig"),
+        tableOutput("outSkippedTab")
       )
     ),
     tabPanel(
@@ -76,16 +77,12 @@ ui <- fluidPage(
           title = "Reward distribution",
           verticalLayout(
             splitLayout(
-              radioButtons(inputId = "rewardFigLogX",
-                           label = "x-axis:",
-                           selected = TRUE,
-                           choices = c("Linear" = FALSE,
-                                       "Logarithmic" = TRUE)),
-              radioButtons(inputId = "rewardFigLogY",
-                           label = "y-axis:",
-                           selected = TRUE,
-                           choices = c("Linear" = FALSE,
-                                       "Pseudo-logarithmic" = TRUE))
+              radioButtons(inputId = "rewardFigLogX", label = "x-axis:", inline = TRUE,
+                           selected = "Logarithmic",
+                           choices = c("Linear", "Logarithmic")),
+              radioButtons(inputId = "rewardFigLogY", label = "y-axis:", inline = TRUE,
+                           selected = "Pseudo-logarithmic",
+                           choices = c("Linear", "Pseudo-logarithmic"))
             ),
             plotOutput("outRewardFig"),
             sliderInput(inputId = "rewardRange",
@@ -99,21 +96,65 @@ ui <- fluidPage(
           )
         ),
         tabPanel(
-          title = "Wins across neighbourhoods",
+          title = "Wins across nhoods",
           verticalLayout(
-            radioButtons(inputId = "winNhoodChoice", label = NULL,
-                         choices = c("Number of wins across neighbourhoods" = TRUE,
-                                     "Distribution of number of win events" = FALSE)),
+            fluidRow(
+              column(width = 2,
+                     selectInput(inputId = "depthWins",
+                                 label = "Depth:",
+                                 choices = filter(depthDistr(dat), depth > 0)$depth,
+                                 selected = 8)),
+              column(width = 6,
+                     sliderInput(inputId = "winNhoodFigHeight",
+                                 label = "Figure height",
+                                 min = 200, max = 2000, value = 450,
+                                 round = TRUE, width = "150%"))
+            ),
             plotOutput("outWinNhoodFig")
           )
         ),
         tabPanel(
-          title = "Total reward",
+          title = "Distribution of wins",
           verticalLayout(
-            radioButtons(inputId = "totalRewardChoice", label = NULL,
-                         choices = c("Total reward across neighbourhoods" = TRUE,
-                                     "Total reward across nodes" = FALSE)),
-            plotOutput("outRewardAcrossFig")
+            fluidRow(
+              column(width = 2,
+                     selectInput(inputId = "depthWD",
+                                 label = "Depth:",
+                                 choices = filter(depthDistr(dat), depth > 0)$depth,
+                                 selected = 8))
+            ),
+            plotOutput("outWinDistrFig")
+          )
+        ),
+        tabPanel(
+          title = "Total reward (nhoods)",
+          verticalLayout(
+            fluidRow(
+              column(width = 2,
+                     selectInput(inputId = "depthTR",
+                                 label = "Depth:",
+                                 choices = filter(depthDistr(dat), depth > 0)$depth,
+                                 selected = 8)),
+              column(width = 6,
+                     sliderInput(inputId = "rewardNhoodFigHeight",
+                                 label = "Figure height",
+                                 min = 200, max = 2000, value = 450,
+                                 round = TRUE, width = "150%"))
+            ),
+            plotOutput("outRewardNhoodFig")
+          )
+        ),
+        tabPanel(
+          title = "Total reward (nodes)",
+          verticalLayout(
+            fluidRow(
+              column(width = 6,
+                     sliderInput(inputId = "rewardNodeFigHeight",
+                                 label = "Figure height",
+                                 min = 400, max = 2000, value = 450,
+                                 round = TRUE, width = "150%"))
+            ),
+            plotOutput("outRewardNodeFig")
           )
         )
       )
@@ -123,51 +164,79 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel(
           title = "Depths",
-          navbarPage(
-            title = "",
-            tabPanel(
-              title = "Table",
-              tableOutput("outDepthTab")
-            ),
-            tabPanel(
-              title = "Figure",
-              verticalLayout(
-                radioButtons(inputId = "depthFigLogY", label = NULL, selected = TRUE,
-                             choices = c("Linear y-axis" = FALSE,
-                                         "Logarithmic y-axis" = TRUE)),
-                plotOutput("outDepthFig")
-              )
-            )
+          fluidRow(
+            column(width = 4, tableOutput("outDepthTab")),
+            column(width = 8, verticalLayout(
+              radioButtons(inputId = "depthLogY", label = NULL,
+                           selected = "Logarithmic y-axis",
+                           choices = c("Linear y-axis", "Logarithmic y-axis")),
+              plotOutput("outDepthFig")
+            ))
           )
         ),
         tabPanel(
           title = "Nodes per neighbourhood",
           verticalLayout(
-            radioButtons(inputId = "nodesFigChoice", label = NULL,
-                         choices = c("Number of nodes across neighbourhoods" = TRUE,
-                                     "Distribution of number of nodes" = FALSE)),
+            fluidRow(
+              column(width = 2,
+                     selectInput(inputId = "depthNodes",
+                                 label = "Depth:",
+                                 choices = filter(depthDistr(dat), depth > 0)$depth,
+                                 selected = 8)),
+              column(width = 6,
+                     sliderInput(inputId = "nodeFigHeight",
+                                 label = "Figure height",
+                                 min = 200, max = 2000, value = 450,
+                                 round = TRUE, width = "150%"))
+            ),
             plotOutput("outNodesPerNhoodFig")
           )
-        )#,
-        # tabPanel(
-        #   title = "Revealers per node",
-        #   verticalLayout(
-        #     radioButtons(inputId = "revealerNodeSortType",
-        #                  label = "Sort neighbourhoods in increasing order of:",
-        #                  choices = c("Honest revealers" = TRUE,
-        #                              "Inaccurate revealers" = FALSE)),
-        #     plotOutput("outRevealersPerNodeFig")
-        #   )
-        # )
+        ),
+        tabPanel(
+          title = "Distribution of nodes",
+          verticalLayout(
+            fluidRow(
+              column(width = 2,
+                     selectInput(inputId = "depthNodes2",
+                                 label = "Depth:",
+                                 choices = filter(depthDistr(dat), depth > 0)$depth,
+                                 selected = 8))
+            ),
+            plotOutput("outNodeDistrFig")
+          )
+        )
       )
     ),
     tabPanel(
       title = "Stakes",
-      verticalLayout(
-        radioButtons(inputId = "stakesFigChoice", label = NULL,
-                     choices = c("Sum of stakes across neighbourhoods" = TRUE,
-                                 "Distribution of sum of stakes" = FALSE)),
-        plotOutput("outStakesNhoodFig")
+      tabsetPanel(
+        tabPanel(
+          title = "Sum of stakes across neighbourhoods",
+          fluidRow(
+            column(width = 2,
+                   selectInput(inputId = "depthStakes",
+                               label = "Depth:",
+                               choices = filter(depthDistr(dat), depth > 0)$depth,
+                               selected = 8)),
+            column(width = 6,
+                   sliderInput(inputId = "stakeFigHeight",
+                               label = "Figure height",
+                               min = 200, max = 2000, value = 450,
+                               round = TRUE, width = "150%"))
+          ),
+          plotOutput("outStakesNhoodFig")
+        ),
+        tabPanel(
+          title = "Distribution of sum of stakes",
+          fluidRow(
+            column(width = 2,
+                   selectInput(inputId = "depthStakes2",
+                               label = "Depth:",
+                               choices = filter(depthDistr(dat), depth > 0)$depth,
+                               selected = 8))
+          ),
+          plotOutput("outStakesNodeFig")
+        )
       )
     )
   )
@@ -176,115 +245,41 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  output$outPriceFig <- renderPlot({
-    dat %>%
-      pricePerRound() %>%
-      mutate(inaccurate = revealers - honest) %>%
-      mutate(price = price / first(price)) %>%
-      restrictRounds(input$roundRange) %>%
-      priceFig()
-  })
-  output$outInacc <- renderText({
-    s <- dat %>%
-      restrictRounds(input$roundRange) %>%
-      inaccurateRevealerStats()
-    str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
-          ", or ", round(100 * s$p, 4), "%")
-  })
-  output$outPriceTab <- renderTable({
-    dat %>%
-      pricePerRound() %>%
-      mutate(inaccurate = revealers - honest, price = price / first(price)) %>%
-      { if (input$inaccFilt == "Show all rounds") . else filter(., inaccurate > 0) } %>%
-      restrictRounds(input$roundRange) %>%
-      transmute(round = roundNumber,
-                `price (in units of the initial value)` = price,
-                `number of revealers` = revealers,
-                `inaccurate revealers` = inaccurate)
-  })
-  output$outRevealersPerNhoodFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      filter(depth == 8) %>%
-      filter(!(roundNumber %in% roundsWithoutWinner(.))) %>%
-      revealerNhoodSummary(.f = mean) %>%
-      revealersPerNhoodFig(TRUE)
-  })
-  output$outChiSqUnifTxt1 <- renderText({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      chisqUnifMissedRounds()
-  })
-  output$outChiSqUnifTxt2 <- renderText({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      chisqUnifMissedRounds()
-  })
-  output$outSkippedFig <- renderPlot({
-    dat %>%
-      missedRounds() %>%
-      restrictRounds(input$roundRange) %>%
-      roundsFig()
-  })
-  output$outSkippedTab <- renderTable({
-    missedRounds(dat) %>%
-      restrictRounds(input$roundRange) %>%
-      rename(`Skipped rounds:` = roundNumber)
-  })
-  output$outRewardFig <- renderPlot({
-    dat %>%
-      skippedRounds() %>%
-      mutate(skip = as_factor(skip)) %>%
-      restrictRounds(input$roundRange) %>%
-      rewardDistrFig(xrange = input$rewardRange,
-                     log.x = input$rewardFigLogX, log.y = input$rewardFigLogY)
-  })
-  output$outWinNhoodFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      { if (input$winNhoodChoice) participationNhoodQuantileFig(winsByNhood(.)) else
-        participationNhoodHistFig(winEventsTab(.))
-      }
-  })
-  output$outRewardAcrossFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      { if (input$totalRewardChoice) rewardNhoodFig(rewardNhoodDistr(.)) else
-        rewardPerNodeFig(rewardPerNode(.))
-      }
-  })
-  output$outDepthTab <- renderTable({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      depthDistr() %>%
-      rename(`number of nodes` = n)
-  })
-  output$outDepthFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      depthDistr() %>%
-      depthDistrFig(log.y = input$depthFigLogY)
-  })
-  output$outNodesPerNhoodFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      { if (input$nodesFigChoice) nodesPerNhoodQuantileFig(nodesByNhoodRank(.)) else
-        nodesPerNhoodHistFig(nodesByNhood(.))
-      }
-  })
-  # output$outRevealersPerNodeFig <- renderPlot({
-  #   dat %>%
-  #     restrictRounds(input$roundRange) %>%
-  #     revealerNhoodSummary() %>%
-  #     revealersPerNhoodFig(input$revealerNodeSortType)
-  # })
-  output$outStakesNhoodFig <- renderPlot({
-    dat %>%
-      restrictRounds(input$roundRange) %>%
-      { if (input$stakesFigChoice) stakesNhoodQuantileFig(rewardNhoodDistr(.)) else
-        stakesNhoodHistFig(rewardNhoodDistr(.))
-      }
-  })
+  options(knitr.kable.NA = "")
+  output$outPriceFig <- renderPlot(outPriceFig(dat, input$roundRange))
+  output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
+  output$outPriceTab <- renderTable(outPriceTab(dat, input$roundRange, input$inaccFilt),
+                                    na = "")
+  output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
+    dat, input$roundRange, input$revealerNhoodDepth, input$revealerSortType),
+    height = reactive(input$revealerNhoodFigHeight))
+  output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))
+  output$outSkippedFig <- renderPlot(outSkippedFig(dat, input$roundRange))
+  output$outSkippedTab <- renderTable(outSkippedTab(dat, input$roundRange))
+  output$outRewardFig <- renderPlot(outRewardFig(
+    dat, input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
+  output$outWinNhoodFig <- renderPlot(outWinNhoodFig(
+    dat, input$roundRange, input$depthWins),
+    height = reactive(input$winNhoodFigHeight))
+  output$outWinDistrFig <- renderPlot(outWinDistrFig(
+    dat, input$roundRange, input$depthWD))
+  output$outRewardNhoodFig <- renderPlot(outRewardNhoodFig(
+    dat, input$roundRange, input$depthTR),
+    height = reactive(input$rewardNhoodFigHeight))
+  output$outRewardNodeFig <- renderPlot(outRewardNodeFig(dat, input$roundRange),
+                                        height = reactive(input$rewardNodeFigHeight))
+  output$outDepthTab <- renderTable(outDepthTab(dat, input$roundRange))
+  output$outDepthFig <- renderPlot(outDepthFig(dat, input$roundRange, input$depthLogY))
+  output$outNodesPerNhoodFig <- renderPlot(outNodesPerNhoodFig(
+    dat, input$roundRange, input$depthNodes),
+    height = reactive(input$nodeFigHeight))
+  output$outNodeDistrFig <- renderPlot(outNodeDistrFig(
+    dat, input$roundRange, input$depthNodes2))
+  output$outStakesNhoodFig <- renderPlot(outStakesNhoodFig(
+    dat, input$roundRange, input$depthStakes),
+    height = reactive(input$stakeFigHeight))
+  output$outStakesNodeFig <- renderPlot(outStakesNodeFig(
+    dat, input$roundRange, input$depthStakes2))
 }
 
 
@@ -292,7 +287,7 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 
 # source("download_clean.R")
-# fetchJsonAll(minRound = max(dat$roundNumber)) %>%
+# fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
 #   cleanData() %>%
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")

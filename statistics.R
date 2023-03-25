@@ -208,7 +208,7 @@ winEventsTab <- function(dat) {
   dat %>%
     rewardNhoodDistr() %>%
     count(winEvents, name = "observed") %>%
-    right_join(tibble(winEvents = 1:max(.$winEvents)), by = "winEvents") %>%
+    right_join(tibble(winEvents = min(.$winEvents):max(.$winEvents)), by="winEvents") %>%
     mutate(predicted = unifDistrNull(winEvents, rounds(dat), nhoods(dat)) *
              sum(observed, na.rm = TRUE))
 }
@@ -231,7 +231,7 @@ nodesByNhood <- function(dat) {
     nodesPerNhood() %>%
     count(nhood, name = "num") %>%
     count(num) %>%
-    right_join(tibble(num = 1:max(.$num)), by = "num") %>%
+    right_join(tibble(num = min(.$num):max(.$num)), by = "num") %>%
     mutate(predict = unifDistrNull(num, nodes(dat), nhoods(dat))*sum(n, na.rm=TRUE))
 }
 

@@ -26,3 +26,5 @@ Other
 - In roundsFig: no label if error, not enough data, or similar problems
 
 - Tool to select one day's, week's, or month's worth of rounds from the round range slider
+
+- Should the reward-per-node figure be split by depth or not?

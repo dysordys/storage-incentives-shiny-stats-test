@@ -1,9 +1,12 @@
 priceFig <- function(dat, maxPoints = 3001) {
+  yscale = max(dat$price) / max(dat$honest)
   dat %>%
     filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
-    ggplot(aes(x = roundNumber, y = price)) +
-    geom_line(colour = "steelblue") +
+    ggplot(aes(x = roundNumber)) +
+    geom_line(aes(y = price), colour = "steelblue") +
+    geom_smooth(aes(y = honest * yscale), colour = "goldenrod", se = FALSE) +
     labs(x = "round", y = "price (in units of the initial value)") +
+    scale_y_continuous(sec.axis = sec_axis(name = "honest revealers", ~./yscale)) +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -14,17 +17,18 @@ roundsFig <- function(dat) {
     ggplot(aes(x = roundNumber)) +
     geom_rug(colour = "steelblue", alpha = 0.6) +
     geom_histogram(colour = "steelblue", fill = "steelblue", alpha = 0.2, bins = 30) +
-    labs(x = "round", y = "no. of skipped rounds") +
+    labs(x = "round", y = "number of skipped rounds") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
-rewardDistrFig <- function(dat, xrange = c(NA, NA), log.x = TRUE, log.y = TRUE) {
+rewardDistrFig <- function(dat, xrange = c(NA, NA),
+                           log.x = "Logarithmic", log.y = "Pseudo-logarithmic") {
   plt <- dat %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
-    { if (log.x) scale_x_log10(name = "reward", limits = xrange) else
+    { if (log.x == "Logarithmic") scale_x_log10(name = "reward", limits = xrange) else
       scale_x_continuous(name = "reward", limits = xrange)
     } +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
@@ -32,15 +36,20 @@ rewardDistrFig <- function(dat, xrange = c(NA, NA), log.x = TRUE, log.y = TRUE) 
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"))
   ymax <- layer_scales(plt, 1, 1)$y$range$range[2]
-  if (log.y) plt + scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
-                                      breaks = 10^(0:ceiling(log10(ymax)))) else plt
+  if (log.y == "Pseudo-logarithmic") {
+    plt + scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                             breaks = 10^(0:ceiling(log10(ymax))))
+  } else {
+    plt
+  }
 }
 
 
 participationNhoodHistFig <- function(dat) {
   dat %>%
     pivot_longer(cols = !winEvents) %>%
-    ggplot(aes(x = winEvents, y = value, colour = name, fill = name, alpha = name)) +
+    ggplot(aes(x = as_factor(winEvents), y = value,
+               colour = name, fill = name, alpha = name)) +
     geom_col(position = "identity", na.rm = TRUE) +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     scale_fill_manual(name = NULL, values = c("steelblue", "goldenrod")) +
@@ -52,14 +61,16 @@ participationNhoodHistFig <- function(dat) {
 
 participationNhoodQuantileFig <- function(dat) {
   dat %>%
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(winEvents, predict)) %>%
     mutate(name = recode(name, "winEvents" = "observed", "predict" = "predicted")) %>%
-    ggplot(aes(x = rank, y = value, colour = name)) +
+    ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_step() +
-    labs(x = "neighbourhoods", y = "number of win events") +
+    labs(x = "number of win events", y = "neighbourhood") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
 }
 
 
@@ -68,11 +79,13 @@ rewardNhoodFig <- function(dat) {
     rename(observed = totalReward) %>%
     arrange(observed) %>%
     rowid_to_column("rank") %>%
-    ggplot(aes(x = rank, y = observed)) +
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
+    ggplot(aes(x = observed, y = nhood, group = 0)) +
     geom_step(colour = "steelblue") +
-    labs(x = "neighbourhoods", y = "sum of rewards") +
+    labs(x = "sum of rewards", y = "neighbourhood") +
     theme_bw(base_size = 16) +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
 }
 
 
@@ -80,7 +93,8 @@ nodesPerNhoodHistFig <- function(dat) {
   dat %>%
     pivot_longer(cols = !num) %>%
     mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
-    ggplot(aes(x = num, y = value, colour = name, fill = name, alpha = name)) +
+    ggplot(aes(x = as_factor(num), y = value,
+               colour = name, fill = name, alpha = name)) +
     geom_col(position = "identity", na.rm = TRUE) +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     scale_fill_manual(name = NULL, values = c("steelblue", "goldenrod")) +
@@ -92,30 +106,34 @@ nodesPerNhoodHistFig <- function(dat) {
 
 nodesPerNhoodQuantileFig <- function(dat) {
   dat %>%
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(n, predict)) %>%
     mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
-    ggplot(aes(x = rank, y = value, colour = name)) +
+    ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_step() +
-    labs(x = "neighbourhoods", y = "number of nodes") +
+    labs(x = "number of nodes", y = "neighbourhood") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
 }
 
 
-revealersPerNhoodFig <- function(dat, sortByHonest = TRUE) {
+revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers") {
   dat %>%
-    arrange(if (sortByHonest) honest else inaccurate) %>%
+    arrange(if (sortBy == "Honest revealers") honest else
+      if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
     rowid_to_column("rank") %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
-    ggplot(aes(x = nhood, y = value, fill = `revealer type`, colour = `revealer type`)) +
+    ggplot(aes(x = value, y = nhood, colour = `revealer type`, fill = `revealer type`)) +
     geom_col(alpha = 0.5) +
-    labs(x = "neighbourhoods", y = "mean number of revealers") +
+    labs(x = "mean number of revealers", y = "neighbourhood") +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
     scale_fill_manual(values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8))
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
 }
 
 
@@ -135,12 +153,14 @@ stakesNhoodQuantileFig <- function(dat) {
     rename(observed = totalStake) %>%
     arrange(observed) %>%
     rowid_to_column("rank") %>%
-    ggplot(aes(x = rank, y = observed)) +
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
+    ggplot(aes(x = observed, y = nhood, group = 0)) +
     geom_step(colour = "steelblue") +
-    labs(x = "neighbourhoods", y = "sum of stakes") +
-    scale_y_log10() +
+    labs(x = "sum of stakes", y = "neighbourhood") +
+    scale_x_log10() +
     theme_bw(base_size = 16) +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
 }
 
 
@@ -148,20 +168,20 @@ rewardPerNodeFig <- function(dat) {
   dat %>%
     arrange(reward) %>%
     rowid_to_column("rank") %>%
-    ggplot(aes(x = rank, y = reward)) +
+    ggplot(aes(x = reward, y = rank)) +
     geom_step(colour = "steelblue") +
-    scale_x_continuous(name = "nodes (sorted in increasing order of total reward)") +
-    scale_y_log10(name = "sum of rewards") +
+    scale_x_log10(name = "sum of rewards") +
+    scale_y_continuous(name = "nodes (in increasing order of total reward)") +
     theme_bw(base_size = 16) +
     theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }
 
 
-depthDistrFig <- function(dat, log.y = TRUE) {
+depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
   dat %>%
     ggplot(aes(x = as_factor(depth), y = n)) +
     geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
     labs(x = "depth", y = "number of nodes") +
-    { if (log.y) scale_y_log10() else scale_y_continuous() } +
+    { if (log.y == "Logarithmic y-axis") scale_y_log10() else scale_y_continuous() } +
     theme_bw(base_size = 16)
 }

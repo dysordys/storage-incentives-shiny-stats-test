@@ -3,7 +3,9 @@ priceFig <- function(dat, maxPoints = 3001) {
   dat %>%
     filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
     ggplot(aes(x = roundNumber)) +
-    geom_line(aes(y = price), colour = "steelblue") +
+    geom_line(aes(y = price), colour = "steelblue", alpha = 0.4) +
+    geom_line(aes(y = honest * yscale), colour = "goldenrod", alpha = 0.2) +
+    geom_smooth(aes(y = price), colour = "steelblue", se = FALSE) +
     geom_smooth(aes(y = honest * yscale), colour = "goldenrod", se = FALSE) +
     labs(x = "round", y = "price (in units of the initial value)") +
     scale_y_continuous(sec.axis = sec_axis(name = "honest revealers", ~./yscale)) +
@@ -20,6 +22,15 @@ roundsFig <- function(dat) {
     labs(x = "round", y = "number of skipped rounds") +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
+}
+
+
+skippedRoundDistrFig <- function(dat) {
+  dat %>%
+    ggplot(aes(x = skip, y = n)) +
+    geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
+    labs(x = "Number of consecutive rounds skipped", y = "Number of occurrences") +
+    theme_bw(base_size = 16)
 }
 
 

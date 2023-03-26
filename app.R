@@ -57,11 +57,23 @@ ui <- fluidPage(
     ),
     tabPanel(
       title = "Skipped rounds",
-      verticalLayout(
-        textOutput("outNumSkipped"),
-        textOutput("outChiSqUnifTxt"),
-        plotOutput("outSkippedFig"),
-        tableOutput("outSkippedTab")
+      tabsetPanel(
+        tabPanel(
+          title = "Through time",
+          verticalLayout(
+            textOutput("outNumSkipped"),
+            textOutput("outChiSqUnifTxt"),
+            plotOutput("outSkippedFig"),
+            tableOutput("outSkippedTab")
+          )
+        ),
+        tabPanel(
+          title = "Distribution",
+          fluidRow(
+            column(width = 4, tableOutput("outSkipDistrTab")),
+            column(width = 8, plotOutput("outSkipDistrFig"))
+          )
+        )
       )
     ),
     tabPanel(
@@ -209,6 +221,8 @@ server <- function(input, output) {
   output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))
   output$outSkippedFig <- renderPlot(outSkippedFig(dat, input$roundRange))
   output$outSkippedTab <- renderTable(outSkippedTab(dat, input$roundRange))
+  output$outSkipDistrTab <- renderTable(outSkippedRoundDistrTab(dat, input$roundRange))
+  output$outSkipDistrFig <- renderPlot(outSkippedRoundDistrFig(dat, input$roundRange))
   output$outRewardFig <- renderPlot(outRewardFig(
     dat, input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
   output$outWinNhoodFig <- renderPlot(outWinNhoodFig(

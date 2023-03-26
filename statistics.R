@@ -103,7 +103,14 @@ skippedRounds <- function(dat) {
   dat %>%
     filter(event == "won") %>%
     select(roundNumber, rewardAmount) %>%
-    mutate(skip = roundNumber - lag(roundNumber, default = first(roundNumber) - 1) - 1)
+    mutate(skip = roundNumber - lag(roundNumber, default = first(roundNumber) - 1L) - 1L)
+}
+
+
+skippedRoundDistr <- function(dat) {
+  dat %>%
+    skippedRounds() %>%
+    count(skip)
 }
 
 

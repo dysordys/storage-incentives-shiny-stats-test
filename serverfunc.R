@@ -76,6 +76,24 @@ outSkippedTab <- function(dat, roundRange = NA) {
 }
 
 
+outSkippedRoundDistrTab <- function(dat, roundRange = NA) {
+  dat %>%
+    restrictRounds(roundRange) %>%
+    skippedRoundDistr() %>%
+    filter(skip > 0) %>%
+    rename(`Skipped in a row` = skip, `count` = n)
+}
+
+
+outSkippedRoundDistrFig <- function(dat, roundRange = NA) {
+  dat %>%
+    restrictRounds(roundRange) %>%
+    skippedRoundDistr() %>%
+    filter(skip > 0) %>%
+    skippedRoundDistrFig()
+}
+
+
 outRewardFig <- function(dat, roundRange = NA, xrange = range(dat$rewardAmount),
                          log.x = "Logarithmic", log.y = "Pseudo-logarithmic") {
   dat %>%

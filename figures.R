@@ -134,6 +134,27 @@ nodesPerNhoodQuantileFig <- function(dat) {
 }
 
 
+winNodeNhoodFig <- function(dat, sortBy = "wins") {
+  dat %>%
+    mutate(rank = { if (sortBy == "wins") rankWin else rankNode }) %>%
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
+    pivot_longer(cols = c(nodes, winEvents)) %>%
+    mutate(name = { if (sortBy != "wins") fct_relevel(name, "winEvents") else
+      fct_relevel(name, "nodes") }) %>%
+    ggplot(aes(x = value, y = nhood, colour = name, fill = name)) +
+    geom_col(alpha = 0.5) +
+    labs(x = "number of nodes / wins", y = "neighbourhood") +
+    scale_colour_manual(name = NULL,
+                        values = c("steelblue", "goldenrod", "forestgreen", "plum4")) +
+    scale_fill_manual(name = NULL,
+                      values = c("steelblue", "goldenrod", "forestgreen", "plum4")) +
+    theme_bw(base_size = 16) +
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
+}
+
+
 revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers") {
   dat %>%
     arrange(if (sortBy == "Honest revealers") honest else

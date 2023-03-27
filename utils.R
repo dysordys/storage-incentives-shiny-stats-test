@@ -265,6 +265,16 @@ nodesByNhoodRank <- function(dat) {
 }
 
 
+winsNodesByNhood <- function(dat) {
+  dat %>%
+    nodesByNhoodRank() %>%
+    rename(nodes = n, nodesPred = predict) %>%
+    left_join(winsByNhood(restrictRoundsDepth(dat, roundRange, depth)),
+              by = c("nhood"), suffix = c("Node", "Win")) %>%
+    rename(winsPred = predict)
+}
+
+
 roundsWithoutWinner <- function(dat) {
   dat %>%
     group_by(roundNumber) %>%

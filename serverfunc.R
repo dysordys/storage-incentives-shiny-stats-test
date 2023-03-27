@@ -96,6 +96,13 @@ outWinNhoodFig <- function(dat, roundRange = NA, depth = 8) {
 }
 
 
+outWinNodeNhoodFig <- function(dat, roundRange = NA, depth = 8) {
+  restrictRoundsDepth(dat, roundRange, depth) %>%
+    winsNodesByNhood() %>%
+    winNodeNhoodFig(sortBy = "nodes")
+}
+
+
 outWinDistrFig <- function(dat, roundRange = NA, depth = 8) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     winEventsTab() %>%

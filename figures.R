@@ -30,7 +30,8 @@ skippedRoundDistrFig <- function(dat) {
     ggplot(aes(x = skip, y = n)) +
     geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
     labs(x = "Number of consecutive rounds skipped", y = "Number of occurrences") +
-    theme_bw(base_size = 16)
+    theme_bw(base_size = 16) +
+    theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -81,7 +82,8 @@ participationNhoodQuantileFig <- function(dat) {
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
     theme(axis.text.y = element_text(size = 8), legend.position = "top",
-          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -96,7 +98,8 @@ rewardNhoodFig <- function(dat) {
     labs(x = "sum of rewards", y = "neighbourhood") +
     theme_bw(base_size = 16) +
     theme(axis.text.y = element_text(size = 8), legend.position = "top",
-          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -126,7 +129,8 @@ nodesPerNhoodQuantileFig <- function(dat) {
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
     theme(axis.text.y = element_text(size = 8), legend.position = "top",
-          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -144,7 +148,8 @@ revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers") {
     scale_fill_manual(values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
     theme(axis.text.y = element_text(size = 8), legend.position = "top",
-          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -155,7 +160,8 @@ stakesNhoodHistFig <- function(dat) {
     geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 80) +
     labs(x = "sum of stakes") +
     scale_x_log10() +
-    theme_bw(base_size = 16)
+    theme_bw(base_size = 16) +
+    theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -171,7 +177,8 @@ stakesNhoodQuantileFig <- function(dat) {
     scale_x_log10() +
     theme_bw(base_size = 16) +
     theme(axis.text.y = element_text(size = 8), legend.position = "top",
-          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -184,7 +191,7 @@ rewardPerNodeFig <- function(dat) {
     scale_x_log10(name = "sum of rewards") +
     scale_y_continuous(name = "nodes (in increasing order of total reward)") +
     theme_bw(base_size = 16) +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
@@ -194,5 +201,6 @@ depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
     geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
     labs(x = "depth", y = "number of nodes") +
     { if (log.y == "Logarithmic y-axis") scale_y_log10() else scale_y_continuous() } +
-    theme_bw(base_size = 16)
+    theme_bw(base_size = 16) +
+    theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }

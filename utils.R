@@ -27,6 +27,15 @@ restrictRounds <- function(dat, roundRange) {
 }
 
 
+restrictRoundsDepth <- function(dat, roundRange, depths) {
+  dat %>%
+  { if (isValidRoundRange(roundRange))
+    filter(., roundNumber %in% reduce(round(roundRange), `:`)) else .
+  } %>%
+    filter(depth %in% depths)
+}
+
+
 roundsToPlot <- function(roundRange, maxPoints) {
   if (isValidRoundRange(roundRange)) {
     diff <- round(roundRange[2]) - round(roundRange[1])

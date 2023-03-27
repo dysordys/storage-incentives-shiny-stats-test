@@ -1,14 +1,13 @@
 library(shiny)
 library(tidyverse)
 
-source("statistics.R")
+source("utils.R")
 source("figures.R")
 source("serverfunc.R")
 source("uifunc.R")
 
 
-dat <- read_rds("data.rds") %>% calculateNhoodsDec()
-
+dat <- read_rds("data.rds")
 
 
 ui <- fluidPage(
@@ -59,7 +58,7 @@ ui <- fluidPage(
       title = "Skipped rounds",
       tabsetPanel(
         tabPanel(
-          title = "Through time",
+          title = "Skipped rounds through time",
           verticalLayout(
             textOutput("outNumSkipped"),
             textOutput("outChiSqUnifTxt"),
@@ -68,7 +67,7 @@ ui <- fluidPage(
           )
         ),
         tabPanel(
-          title = "Distribution",
+          title = "Distribution of skipped rounds",
           fluidRow(
             column(width = 4, tableOutput("outSkipDistrTab")),
             column(width = 8, plotOutput("outSkipDistrFig"))
@@ -256,6 +255,7 @@ shinyApp(ui = ui, server = server)
 # source("download_clean.R")
 # fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
 #   cleanData() %>%
+#   calculateNhoodsDec() %>%
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 

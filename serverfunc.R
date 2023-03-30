@@ -96,10 +96,10 @@ outWinNhoodFig <- function(dat, roundRange = NA, depth = 8) {
 }
 
 
-outWinNodeNhoodFig <- function(dat, roundRange = NA, depth = 8) {
+outWinNodeNhoodFig <- function(dat, roundRange = NA, depth = 8, sortBy = "wins") {
   restrictRoundsDepth(dat, roundRange, depth) %>%
-    winsNodesByNhood() %>%
-    winNodeNhoodFig(sortBy = "nodes")
+    winsNodesByNhood(roundRange, depth) %>%
+    winNodeNhoodFig(sortBy)
 }
 
 

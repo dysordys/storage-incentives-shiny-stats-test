@@ -23,4 +23,6 @@ Other
 
 - stakeFrozen needs to be incorporated in data
 
-- Tool to select one day's, week's, or month's worth of rounds from the round range slider
+- Mapping round range slider to calendar time
+
+- For rewards: convert from PLUR to BZZ

@@ -170,6 +170,21 @@ ui <- fluidPage(
           )
         ),
         tabPanel(
+          title = "Nodes & wins per neighbourhood",
+          verticalLayout(
+            fluidRow(
+              column(width = 2, depthSelect(inputId = "depthWinsNodes",
+                                            filter(depthDistr(dat), depth > 0)$depth)),
+              column(width = 6, heightSlider(inputId = "winNodeFigHeight")),
+              column(width = 4,  radioButtons(inputId = "sortWinNode",
+                                              label = "Sort by number of:",
+                                              selected = "wins", inline = TRUE,
+                                              choices = c("wins", "nodes")))
+            ),
+            plotOutput("outWinsNodesPerNhoodFig")
+          )
+        ),
+        tabPanel(
           title = "Distribution of nodes",
           verticalLayout(
             fluidRow(
@@ -239,6 +254,9 @@ server <- function(input, output) {
   output$outNodesPerNhoodFig <- renderPlot(outNodesPerNhoodFig(
     dat, input$roundRange, input$depthNodes),
     height = reactive(input$nodeFigHeight))
+  output$outWinsNodesPerNhoodFig <- renderPlot(outWinNodeNhoodFig(
+    dat, input$roundRange, input$depthWinsNodes, input$sortWinNode),
+    height = reactive(input$winNodeFigHeight))
   output$outNodeDistrFig <- renderPlot(outNodeDistrFig(
     dat, input$roundRange, input$depthNodes2))
   output$outStakesNhoodFig <- renderPlot(outStakesNhoodFig(

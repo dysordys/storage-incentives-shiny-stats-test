@@ -265,7 +265,7 @@ nodesByNhoodRank <- function(dat) {
 }
 
 
-winsNodesByNhood <- function(dat) {
+winsNodesByNhood <- function(dat, roundRange, depth) {
   dat %>%
     nodesByNhoodRank() %>%
     rename(nodes = n, nodesPred = predict) %>%

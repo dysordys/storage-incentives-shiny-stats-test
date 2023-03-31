@@ -224,3 +224,16 @@ depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
+
+
+stakedNodesFig <- function(dat) {
+  dat %>%
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
+    ggplot(aes(x = stakedNodes, y = nhood, group = 0)) +
+    geom_step(colour = "steelblue") +
+    labs(x = "number of staked nodes", y = "neighbourhood") +
+    theme_bw(base_size = 16) +
+    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+          panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+          plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
+}

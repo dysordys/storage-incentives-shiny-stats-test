@@ -185,6 +185,16 @@ nodesPerNhood <- function(dat) {
 }
 
 
+stakedNodesPerNhood <- function(dat) {
+  dat %>%
+    filter(!is.na(nhood)) %>%
+    mutate(stake = 1L * (stake > 0)) %>%
+    group_by(nhood) %>%
+    summarise(stakedNodes = sum(stake)) %>%
+    ungroup()
+}
+
+
 rewardPerNode <- function(dat) {
   dat %>%
     filter(event == "won") %>%

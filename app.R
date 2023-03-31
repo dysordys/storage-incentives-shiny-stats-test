@@ -215,6 +215,15 @@ ui <- fluidPage(
                                           filter(depthDistr(dat), depth > 0)$depth))
           ),
           plotOutput("outStakesNodeFig")
+        ),
+        tabPanel(
+          title = "Staked nodes",
+          fluidRow(
+            column(width = 2, depthSelect(inputId = "depthStakes3",
+                                          filter(depthDistr(dat), depth > 0)$depth)),
+            column(width = 6, heightSlider(inputId = "stakedNodesFigHeight"))
+          ),
+          plotOutput("outStakedNodesFig")
         )
       )
     )
@@ -264,6 +273,9 @@ server <- function(input, output) {
     height = reactive(input$stakeFigHeight))
   output$outStakesNodeFig <- renderPlot(outStakesNodeFig(
     dat, input$roundRange, input$depthStakes2))
+  output$outStakedNodesFig <- renderPlot(outStakedNodesFig(
+    dat, input$roundRange, input$depthStakes3),
+    height = reactive(input$stakedNodesFigHeight))
 }
 
 

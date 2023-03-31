@@ -165,3 +165,12 @@ outStakesNodeFig <- function(dat, roundRange = NA, depth = 8) {
     rewardNhoodDistr() %>%
     stakesNhoodHistFig()
 }
+
+
+outStakedNodesFig <- function(dat, roundRange = NA, depth = 8) {
+  restrictRoundsDepth(dat, roundRange, depth) %>%
+    stakedNodesPerNhood() %>%
+    arrange(stakedNodes) %>%
+    rowid_to_column("rank") %>%
+    stakedNodesFig()
+}

@@ -7,8 +7,9 @@ priceFig <- function(dat, maxPoints = 3001) {
     geom_line(aes(y = honest * yscale), colour = "goldenrod", alpha = 0.2) +
     geom_smooth(aes(y = price), colour = "steelblue", se = FALSE) +
     geom_smooth(aes(y = honest * yscale), colour = "goldenrod", se = FALSE) +
-    labs(x = "round", y = "price (in units of the initial value)") +
-    scale_y_continuous(sec.axis = sec_axis(name = "honest revealers", ~./yscale)) +
+    labs(x = "round", y = "price (blue; in units of initial value)") +
+    scale_y_continuous(sec.axis = sec_axis(name = "honest revealers (yellow)",
+                                           function(y) y / yscale)) +
     theme_bw(base_size = 16) +
     theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -79,9 +80,10 @@ participationNhoodQuantileFig <- function(dat) {
     ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_step() +
     labs(x = "number of win events", y = "neighbourhood") +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -96,8 +98,9 @@ rewardNhoodFig <- function(dat) {
     ggplot(aes(x = observed, y = nhood, group = 0)) +
     geom_step(colour = "steelblue") +
     labs(x = "sum of rewards", y = "neighbourhood") +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -126,9 +129,10 @@ nodesPerNhoodQuantileFig <- function(dat) {
     ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_step() +
     labs(x = "number of nodes", y = "neighbourhood") +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -140,21 +144,20 @@ winNodeNhoodFig <- function(dat, sortBy = "wins") {
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     rename(`win events` = winEvents) %>%
     pivot_longer(cols = c(nodes, `win events`)) %>%
-    mutate(name = { if (sortBy != "wins") fct_relevel(name, "win events") else
-      fct_relevel(name, "nodes") }) %>%
     ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_point(alpha = 0.5) +
     labs(x = "number of nodes / wins", y = "neighbourhood") +
-    scale_colour_manual(name = NULL, guide = guide_legend(override.aes = list(alpha=1)),
-                        values = c("steelblue", "goldenrod", "forestgreen", "plum4")) +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
+    scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod"),
+                        guide = guide_legend(override.aes = list(alpha = 1))) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
 
 
-revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers") {
+revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA) {
   dat %>%
     arrange(if (sortBy == "Honest revealers") honest else
       if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
@@ -163,11 +166,12 @@ revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers") {
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
     ggplot(aes(x = value, y = nhood, colour = `revealer type`, fill = `revealer type`)) +
     geom_col(alpha = 0.5) +
-    labs(x = "mean number of revealers", y = "neighbourhood") +
+    labs(x = xlab, y = "neighbourhood") +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
     scale_fill_manual(values = c("steelblue", "goldenrod")) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -194,9 +198,9 @@ stakesNhoodQuantileFig <- function(dat) {
     ggplot(aes(x = observed, y = nhood, group = 0)) +
     geom_step(colour = "steelblue") +
     labs(x = "sum of stakes", y = "neighbourhood") +
-    scale_x_log10() +
+    scale_x_log10(expand = expansion(mult = c(0.01, 0.05))) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }
@@ -232,8 +236,9 @@ stakedNodesFig <- function(dat) {
     ggplot(aes(x = stakedNodes, y = nhood, group = 0)) +
     geom_step(colour = "steelblue") +
     labs(x = "number of staked nodes", y = "neighbourhood") +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     theme_bw(base_size = 16) +
-    theme(axis.text.y = element_text(size = 8), legend.position = "top",
+    theme(axis.text.y = element_text(size = 8, family = "mono"), legend.position = "top",
           panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
           plot.margin = unit(c(0.2, 2, 0.2, 0.2), "cm"))
 }

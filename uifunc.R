@@ -4,6 +4,6 @@ depthSelect <- function(inputId, depths = 1:9) {
 
 
 heightSlider <- function(inputId, min = 200) {
-  sliderInput(inputId, label = "Figure height", min = min, max = 2000,
+  sliderInput(inputId, label = "Figure height", min = min, max = 2500,
               value = 450, round = TRUE, width = "150%")
 }

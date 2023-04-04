@@ -37,7 +37,7 @@ ui <- fluidPage(
           )
         ),
         tabPanel(
-          title = "Revealers per neighbourhood",
+          title = "Avg. revealers per nhood",
           verticalLayout(
             fluidRow(
               column(width = 2, depthSelect(inputId = "revealerNhoodDepth",
@@ -50,6 +50,22 @@ ui <- fluidPage(
                                                          "Numerical order")))
             ),
             plotOutput("outRevealersPerNhoodFig")
+          )
+        ),
+        tabPanel(
+          title = "Total revealers per nhood",
+          verticalLayout(
+            fluidRow(
+              column(width = 2, depthSelect(inputId = "revealerNhoodDepth2",
+                                            filter(depthDistr(dat), depth > 0)$depth)),
+              column(width = 6, heightSlider(inputId = "revealerNhoodFigHeight2")),
+              column(width = 4, radioButtons(inputId = "revealerSortType2",
+                                             label = "Sort neighbourhoods by:",
+                                             choices = c("Honest revealers",
+                                                         "Inaccurate revealers",
+                                                         "Numerical order")))
+            ),
+            plotOutput("outRevealersPerNhoodFig2")
           )
         )
       )
@@ -238,8 +254,11 @@ server <- function(input, output) {
   output$outPriceTab <- renderTable(outPriceTab(dat, input$roundRange, input$inaccFilt),
                                     na = "")
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
-    dat, input$roundRange, input$revealerNhoodDepth, input$revealerSortType),
+    dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType),
     height = reactive(input$revealerNhoodFigHeight))
+  output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
+    dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2),
+    height = reactive(input$revealerNhoodFigHeight2))
   output$outNumSkipped <- renderText(outNumSkipped(dat, input$roundRange))
   output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))
   output$outSkippedFig <- renderPlot(outSkippedFig(dat, input$roundRange))

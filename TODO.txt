@@ -1,27 +1,9 @@
-Ideas for stats dashboard
-
-What is the distribution of number of overlays (nodes) per neighborhood?
- * distribution of playing and staked nodes per neighborhood
- * distribution of 'dishonest' nodes per neighborhood
-
-Staking
- * Distribution of staked nodes not playing
- * Distribution of stakes by neighborhood
-
-Other
- * In the last x rounds, what was the average number of revealers by round
- * Skipped rounds distribution over time
- * Distribution of reported depth and are there any seeming anomalies
- * How often are 'honest' nodes misreporting their rc
- * How many rounds are controversial (have some disagreement in hashes)
- * Distribution of freezes over time (how many nodes frozen at any given point)
- * Distribution of freezes over neighborhoods
- * Distribution of anchors
-
+- How often are 'honest' nodes misreporting their rc
+- Distribution of freezes over time (how many nodes frozen at any given point)
+- Distribution of freezes over neighborhoods
+- Distribution of anchors
 
 - Read/write communication with online data source
-
-- stakeFrozen needs to be incorporated in data
 
 - Mapping round range slider to calendar time
 

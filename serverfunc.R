@@ -41,6 +41,28 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
 }
 
 
+outRevealCommitTab <- function(dat, roundRange = NA) {
+  restrictRounds(dat, roundRange) %>%
+    select(roundNumber, event, overlay) %>%
+    filter(event != "won") %>%
+    nest(overlays = !roundNumber & !event) %>%
+    mutate(overlays = map(overlays, ~.$overlay)) %>%
+    pivot_wider(names_from = event, values_from = overlays) %>%
+    mutate(`revealed but not committed` = map2(revealed, committed, setdiff)) %>%
+    mutate(`committed but not revealed` = map2(committed, revealed, setdiff)) %>%
+    mutate(l1 = map_int(`revealed but not committed`, length)) %>%
+    mutate(l2 = map_int(`committed but not revealed`, length)) %>%
+    filter(l1 != 0 | l2 != 0) %>%
+    select(-l1, -l2) %>%
+    mutate(revealed = map_int(revealed, length)) %>%
+    mutate(committed = map_int(committed, length)) %>%
+    mutate(`revealed but not committed` = map_chr(`revealed but not committed`, str_c,
+                                                  collapse = "\n")) %>%
+    mutate(`committed but not revealed` = map_chr(`committed but not revealed`, str_c,
+                                                  collapse = "\n"))
+}
+
+
 outChiSqUnifTxt <- function(dat, roundRange = NA) {
   chisqUnifMissedRounds(restrictRounds(dat, roundRange))
 }

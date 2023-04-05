@@ -20,14 +20,14 @@ ui <- fluidPage(
                 value = range(dat$roundNumber),
                 width = "90%"),
     tabPanel(
-      title = "Price",
+      title = "Revealers",
       tabsetPanel(
         tabPanel(
-          title = "Graph of price change",
+          title = "Price change",
           verticalLayout(plotOutput("outPriceFig"))
         ),
         tabPanel(
-          title = "Table of price change and revealers",
+          title = "Revealer table",
           verticalLayout(
             radioButtons(inputId = "inaccFilt", label = NULL,
                          choices = c("Show all rounds",
@@ -67,7 +67,13 @@ ui <- fluidPage(
             ),
             plotOutput("outRevealersPerNhoodFig2")
           )
-        )
+        ),
+        tabPanel(
+          title = "Reveals vs. commits",
+          tags$html(tags$body(p(str_c("Table showing rounds where there is a mismatch ",
+                                      "between revealers and committers")))),
+          verticalLayout(tableOutput("outRevealCommitTab"))
+        ),
       )
     ),
     tabPanel(
@@ -259,6 +265,7 @@ server <- function(input, output) {
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2),
     height = reactive(input$revealerNhoodFigHeight2))
+  output$outRevealCommitTab <- renderTable(outRevealCommitTab(dat, input$roundRange))
   output$outNumSkipped <- renderText(outNumSkipped(dat, input$roundRange))
   output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))
   output$outSkippedFig <- renderPlot(outSkippedFig(dat, input$roundRange))

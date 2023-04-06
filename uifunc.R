@@ -103,8 +103,8 @@ rewardTabset <- function(depths, rewardRange) {
         plotOutput("outRewardFig"),
         sliderInput(inputId = "rewardRange", label = "Range of rewards",
                     min = 0, max = ceiling(1.1 * rewardRange[2]),
-                    value = c(0, 1.1) * rewardRange,
-                    round = -2, ticks = FALSE, width = "90%")
+                    value = ceiling(c(0, 1.1) * rewardRange),
+                    round = -2, step = 0.01, width = "90%")
       )
     ),
     tabPanel(

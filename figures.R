@@ -51,7 +51,7 @@ rewardDistrFig <- function(dat, xrange = c(NA, NA),
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
     xScale(dat, log.x, xrange) +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
-                      name = "skipped rounds") +
+                      name = "skipped\nrounds") +
     theme_bw(base_size = 18) +
     theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"))
   ymax <- layer_scales(plt, 1, 1)$y$range$range[2]

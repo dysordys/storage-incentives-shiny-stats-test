@@ -7,25 +7,21 @@ source("serverfunc.R")
 source("uifunc.R")
 
 
-dat <- read_rds("data.rds")
-depths <- depthDistr(dat) %>% filter(depth > 0) %>% pull(depth)
-rewardRange <- range(dat$rewardAmount, na.rm = TRUE)
+dat <- read_rds("data.rds") %>%
+  mutate(rewardAmount = rewardAmount / 1e16, stake = stake / 1e16) # Convert PLUR to BZZ
 
 
 ui <- fluidPage(
   navbarPage(
     title = "View data on:",
-    sliderInput(inputId = "roundRange",
-                label = "Range of rounds",
-                min = min(dat$roundNumber),
-                max = max(dat$roundNumber),
-                value = range(dat$roundNumber),
-                width = "90%"),
-    tabPanel(title = "Revealers", revealerTabset(depths)),
+    sliderInput(inputId = "roundRange", label = "Range of rounds",
+                min = min(dat$roundNumber), max = max(dat$roundNumber),
+                value = range(dat$roundNumber), width = "90%"),
+    tabPanel(title = "Revealers", revealerTabset(depths(dat))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
-    tabPanel(title = "Rewards", rewardTabset(depths, rewardRange)),
-    tabPanel(title = "Nodes", nodeTabset(depths)),
-    tabPanel(title = "Stakes", stakeTabset(depths))
+    tabPanel(title = "Rewards", rewardTabset(depths(dat), rewardRange(dat))),
+    tabPanel(title = "Nodes", nodeTabset(depths(dat))),
+    tabPanel(title = "Stakes", stakeTabset(depths(dat)))
   )
 )
 
@@ -91,3 +87,5 @@ shinyApp(ui = ui, server = server)
 #   write_rds("data.rds", compress = "xz")
 
 # tictoc::tic(); write_rds(downloadAllData(), "data.rds", compress="xz"); tictoc::toc()
+
+# https://api.swarmscan.io/v1/network/stats

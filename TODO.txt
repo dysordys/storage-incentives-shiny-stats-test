@@ -7,4 +7,4 @@
 
 - Mapping round range slider to calendar time
 
-- For rewards: convert from PLUR to BZZ
+- Ability to select one neighbourhood (by binary code) to highlight

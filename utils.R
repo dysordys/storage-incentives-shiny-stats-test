@@ -1,11 +1,9 @@
 adjustPrice <- function(currentPrice, honestRevealers) {
   minimumPrice <- 2^10
   v <- 0.00294
-  #increaseRate <- c(1036, 1031, 1027, 1025, 1024, 1023, 1021, 1017, 1012) / minimumPrice
   targetRedundancy <- 4
   maxConsideredExtraRedundancy <- 4
   usedRedundancy <- min(honestRevealers, targetRedundancy + maxConsideredExtraRedundancy)
-  #max(increaseRate[usedRedundancy + 1] * currentPrice, minimumPrice)
   max(currentPrice * 2^(v * (targetRedundancy - usedRedundancy)), minimumPrice)
 }
 
@@ -155,6 +153,11 @@ proximity <- function(fst, snd) {
 }
 
 
+rewardRange <- function(dat) {
+  range(dat$rewardAmount, na.rm = TRUE)
+}
+
+
 rewardNhoodDistr <- function(dat) {
   dat %>%
     filter(event == "won", !is.na(nhood)) %>%
@@ -208,6 +211,13 @@ depthDistr <- function(dat) {
   dat %>%
     filter(!is.na(depth)) %>%
     count(depth)
+}
+
+
+depths <- function(dat) {
+  depthDistr(dat) %>%
+    filter(depth > 0) %>%
+    pull(depth)
 }
 
 

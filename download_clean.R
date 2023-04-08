@@ -44,10 +44,16 @@ reshapeEvents <- function(events) {
   events %>%
     select(-contains("roundNumber")) %>%
     unnest(winner) %>%
-    # Very occasionally, "depth" is a missing column; add if missing:
     { if ("depth" %in% names(.)) . else mutate(., depth = NA_integer_) } %>%
     rename_with(~str_c("winner.", .x), c(overlay, stake, stakeDensity, depth)) %>%
     unnest(data) %>%
+    # Very occasionally, some columns are missing; add if necessary:
+    { if ("depth" %in% names(.)) . else mutate(., depth = NA_integer_) } %>%
+    { if ("stake" %in% names(.)) . else mutate(., stake = NA_real_) } %>%
+    { if ("stakeDensity" %in% names(.)) . else mutate(., stakeDensity = NA_real_) } %>%
+    { if ("reserveCommitment" %in% names(.)) . else
+      mutate(., reserveCommitment = NA_character_)
+    } %>%
     mutate(id = if_else(type == "event", reserveCommitment, hash)) %>%
     mutate(event = if_else(type == "event", name, "won")) %>%
     mutate(overlay = if_else(event == "won", winner.overlay, overlay)) %>%

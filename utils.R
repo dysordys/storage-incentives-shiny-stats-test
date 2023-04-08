@@ -244,7 +244,8 @@ winEventsTab <- function(dat) {
   dat %>%
     rewardNhoodDistr() %>%
     count(winEvents, name = "observed") %>%
-    right_join(tibble(winEvents = min(.$winEvents):max(.$winEvents)), by="winEvents") %>%
+    { if (nrow(.) > 0) right_join(., tibble(winEvents=min(.$winEvents):max(.$winEvents)),
+                                  by = "winEvents") else . } %>%
     mutate(predicted = unifDistrNull(winEvents, rounds(dat), nhoods(dat)) *
              sum(observed, na.rm = TRUE))
 }

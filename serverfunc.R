@@ -29,8 +29,8 @@ outPriceTab <- function(dat, roundRange = NA, inaccFilt = "Show all rounds") {
 outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
                                     revealerSortType = "Numerical order") {
   fname <- case_when(
-    identical(.f, mean) ~ "Mean ",
-    identical(.f, sum) ~ "Total ",
+    identical(.f, mean) ~ "mean ",
+    identical(.f, sum) ~ "total ",
     TRUE ~ ""
   )
   xlab <- str_c(fname, "number of revealers")

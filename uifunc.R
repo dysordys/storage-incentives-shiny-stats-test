@@ -164,7 +164,7 @@ nodeTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Nodes per neighbourhood",
+      title = "Nodes per nhood",
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "depthNodes", depths)),
@@ -174,7 +174,7 @@ nodeTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Nodes & wins per neighbourhood",
+      title = "Nodes & wins per nhood",
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "depthWinsNodes", depths)),

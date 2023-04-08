@@ -7,4 +7,8 @@
 
 - Mapping round range slider to calendar time
 
+- Start with roundRange for last week's worth of data (say)
+
 - Ability to select one neighbourhood (by binary code) to highlight
+
+- "predicted" -> "null"

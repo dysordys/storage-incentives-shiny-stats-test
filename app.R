@@ -86,6 +86,10 @@ shinyApp(ui = ui, server = server)
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 
+# paste0("aws s3 --profile rw-research-team cp ",
+#        "projects/SWARM/storage-incentives-shiny-stats/data.rds ",
+#        "s3://ethswarm-research-team/data.rds")
+
 # tictoc::tic(); write_rds(downloadAllData(), "data.rds", compress="xz"); tictoc::toc()
 
 # https://api.swarmscan.io/v1/network/stats

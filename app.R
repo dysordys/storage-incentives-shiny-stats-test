@@ -30,9 +30,9 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
-    input$depthSelect), height = reactive(input$revealerNhoodFigHeight))
+    input$depthSelectRevealersPerNhood), height = reactive(input$revealerNhoodFigHeight))
   output$revealerNhoodSelect <- renderUI(nhoodSelect(
-    inputId = "depthSelect", as.integer(input$revealerNhoodDepth)))
+    inputId = "depthSelectRevealersPerNhood", as.integer(input$revealerNhoodDepth)))
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2),
     height = reactive(input$revealerNhoodFigHeight2))

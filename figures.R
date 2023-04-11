@@ -161,7 +161,8 @@ winNodeNhoodFig <- function(dat, sortBy = "wins") {
 }
 
 
-revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA) {
+revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA,
+                                 highlight = NA) {
   dat %>%
     arrange(if (sortBy == "Honest revealers") honest else
       if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
@@ -170,6 +171,7 @@ revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA) {
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
     ggplot(aes(x = value, y = nhood, colour = `revealer type`, fill = `revealer type`)) +
     geom_col(alpha = 0.5) +
+    geom_hline(yintercept = highlight, alpha = 0.5, linetype = "dashed") +
     labs(x = xlab, y = "neighbourhood") +
     scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +

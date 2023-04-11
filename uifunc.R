@@ -1,5 +1,6 @@
-depthSelect <- function(inputId, depths = 1:9) {
-  selectInput(inputId, label = "Depth:", choices = depths, selected = 8)
+roundsSlider <- function(inputId = "roundRange", min, max, value) {
+  sliderInput(inputId, label = "Range of rounds",
+              min = min, max = max, value = value, width = "90%")
 }
 
 
@@ -9,33 +10,31 @@ heightSlider <- function(inputId, min = 200) {
 }
 
 
+depthSelect <- function(inputId, depths = 1:9) {
+  selectInput(inputId, label = "Depth:", choices = depths, selected = 8)
+}
+
+
+nhoodSelect <- function(inputId, depth) {
+  selectInput(inputId, label = "Highlight nhood",
+              choices = c(NA, R.utils::intToBin(0:(2^depth - 1))))
+}
+
+
 revealerTabset <- function(depths) {
   tabsetPanel(
     tabPanel(
-      title = "Price change",
-      verticalLayout(plotOutput("outPriceFig"))
-    ),
-    tabPanel(
-      title = "Revealer table",
-      verticalLayout(
-        radioButtons(inputId = "inaccFilt", label = NULL,
-                     choices = c("Show all rounds",
-                                 "Only show rounds with inaccurate revealers")),
-        textOutput("outInacc"),
-        tableOutput("outPriceTab")
-      )
-    ),
-    tabPanel(
-      title = "Avg. revealers per nhood",
+      title = "Mean revealers per nhood",
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "revealerNhoodDepth", depths)),
-          column(width = 6, heightSlider(inputId = "revealerNhoodFigHeight")),
-          column(width = 4, radioButtons(inputId = "revealerSortType",
+          column(width = 5, heightSlider(inputId = "revealerNhoodFigHeight")),
+          column(width = 3, radioButtons(inputId = "revealerSortType",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
                                                      "Inaccurate revealers",
-                                                     "Numerical order")))
+                                                     "Numerical order"))),
+          column(width = 2, uiOutput(outputId = "revealerNhoodSelect"))
         ),
         plotOutput("outRevealersPerNhoodFig")
       )
@@ -54,6 +53,20 @@ revealerTabset <- function(depths) {
         ),
         plotOutput("outRevealersPerNhoodFig2")
       )
+    ),
+    tabPanel(
+      title = "Revealer table",
+      verticalLayout(
+        radioButtons(inputId = "inaccFilt", label = NULL,
+                     choices = c("Show all rounds",
+                                 "Only show rounds with inaccurate revealers")),
+        textOutput("outInacc"),
+        tableOutput("outPriceTab")
+      )
+    ),
+    tabPanel(
+      title = "Price change",
+      verticalLayout(plotOutput("outPriceFig"))
     ),
     tabPanel(
       title = "Reveals vs. commits",

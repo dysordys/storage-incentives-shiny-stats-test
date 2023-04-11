@@ -27,7 +27,8 @@ outPriceTab <- function(dat, roundRange = NA, inaccFilt = "Show all rounds") {
 
 
 outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
-                                    revealerSortType = "Numerical order") {
+                                    revealerSortType = "Numerical order",
+                                    highlight = NA) {
   fname <- case_when(
     identical(.f, mean) ~ "mean ",
     identical(.f, sum) ~ "total ",
@@ -37,7 +38,7 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
   restrictRoundsDepth(dat, roundRange, depth) %>%
     filter(!(roundNumber %in% roundsWithoutWinner(.))) %>%
     revealerNhoodSummary(.f) %>%
-    revealersPerNhoodFig(revealerSortType, xlab)
+    revealersPerNhoodFig(revealerSortType, xlab, highlight)
 }
 
 

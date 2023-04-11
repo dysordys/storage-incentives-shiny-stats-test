@@ -14,9 +14,10 @@ dat <- read_rds("data.rds") %>%
 ui <- fluidPage(
   navbarPage(
     title = "View data on:",
-    sliderInput(inputId = "roundRange", label = "Range of rounds",
-                min = min(dat$roundNumber), max = max(dat$roundNumber),
-                value = range(dat$roundNumber), width = "90%"),
+    roundsSlider(inputId = "roundRange",
+                 min = min(dat$roundNumber), max = max(dat$roundNumber),
+                 # 672 rounds = 1 week:
+                 value = c(max(dat$roundNumber) - 672, max(dat$roundNumber))),
     tabPanel(title = "Revealers", revealerTabset(depths(dat))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
     tabPanel(title = "Rewards", rewardTabset(depths(dat), rewardRange(dat))),
@@ -27,16 +28,18 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  output$outPriceFig <- renderPlot(outPriceFig(dat, input$roundRange))
-  output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
-  output$outPriceTab <- renderTable(outPriceTab(dat, input$roundRange, input$inaccFilt),
-                                    na = "")
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
-    dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType),
-    height = reactive(input$revealerNhoodFigHeight))
+    dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
+    input$depthSelect), height = reactive(input$revealerNhoodFigHeight))
+  output$revealerNhoodSelect <- renderUI(nhoodSelect(
+    inputId = "depthSelect", as.integer(input$revealerNhoodDepth)))
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2),
     height = reactive(input$revealerNhoodFigHeight2))
+  output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
+  output$outPriceTab <- renderTable(outPriceTab(dat, input$roundRange, input$inaccFilt),
+                                    na = "")
+  output$outPriceFig <- renderPlot(outPriceFig(dat, input$roundRange))
   output$outRevealCommitTab <- renderTable(outRevealCommitTab(dat, input$roundRange))
   output$outNumSkipped <- renderText(outNumSkipped(dat, input$roundRange))
   output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))

@@ -16,7 +16,7 @@ ui <- fluidPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
                  min = min(dat$roundNumber), max = max(dat$roundNumber),
-                 # 672 rounds = 1 week:
+                 # 672 rounds = 1 week(?):
                  value = c(max(dat$roundNumber) - 672, max(dat$roundNumber))),
     tabPanel(title = "Revealers", revealerTabset(depths(dat))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
@@ -31,11 +31,9 @@ server <- function(input, output) {
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
     input$depthSelectRevealersPerNhood), height = reactive(input$revealerNhoodFigHeight))
-  output$revealerNhoodSelect <- renderUI(nhoodSelect(
-    inputId = "depthSelectRevealersPerNhood", as.integer(input$revealerNhoodDepth)))
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
-    dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2),
-    height = reactive(input$revealerNhoodFigHeight2))
+    dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
+    input$depthSelectRevealersPerNhood2), height=reactive(input$revealerNhoodFigHeight2))
   output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
   output$outPriceTab <- renderTable(outPriceTab(dat, input$roundRange, input$inaccFilt),
                                     na = "")
@@ -50,7 +48,7 @@ server <- function(input, output) {
   output$outRewardFig <- renderPlot(outRewardFig(
     dat, input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
   output$outWinNhoodFig <- renderPlot(outWinNhoodFig(
-    dat, input$roundRange, input$depthWins),
+    dat, input$roundRange, input$depthWins, input$depthSelectWinNhood),
     height = reactive(input$winNhoodFigHeight))
   output$outWinDistrFig <- renderPlot(outWinDistrFig(
     dat, input$roundRange, input$depthWD))
@@ -77,6 +75,14 @@ server <- function(input, output) {
   output$outStakedNodesFig <- renderPlot(outStakedNodesFig(
     dat, input$roundRange, input$depthStakes3),
     height = reactive(input$stakedNodesFigHeight))
+
+  # Reactive UI elements - neighbourhood selection:
+  output$revealerNhoodSelect <- renderUI(nhoodSelect(
+    inputId = "depthSelectRevealersPerNhood", as.integer(input$revealerNhoodDepth)))
+  output$revealerNhoodSelect2 <- renderUI(nhoodSelect(
+    inputId = "depthSelectRevealersPerNhood2", as.integer(input$revealerNhoodDepth2)))
+  output$winNhoodSelect <- renderUI(nhoodSelect(
+    inputId = "depthSelectWinNhood", as.integer(input$depthWins)))
 }
 
 
@@ -92,7 +98,5 @@ shinyApp(ui = ui, server = server)
 # paste0("aws s3 --profile rw-research-team cp ",
 #        "projects/SWARM/storage-incentives-shiny-stats/data.rds ",
 #        "s3://ethswarm-research-team/data.rds")
-
-# tictoc::tic(); write_rds(downloadAllData(), "data.rds", compress="xz"); tictoc::toc()
 
 # https://api.swarmscan.io/v1/network/stats

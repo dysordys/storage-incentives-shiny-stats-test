@@ -6,7 +6,7 @@ roundsSlider <- function(inputId = "roundRange", min, max, value) {
 
 heightSlider <- function(inputId, min = 200) {
   sliderInput(inputId, label = "Figure height", min = min, max = 2500,
-              value = 450, round = TRUE, width = "150%")
+              value = 500, round = TRUE, width = "150%")
 }
 
 
@@ -44,12 +44,13 @@ revealerTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "revealerNhoodDepth2", depths)),
-          column(width = 6, heightSlider(inputId = "revealerNhoodFigHeight2")),
-          column(width = 4, radioButtons(inputId = "revealerSortType2",
+          column(width = 5, heightSlider(inputId = "revealerNhoodFigHeight2")),
+          column(width = 3, radioButtons(inputId = "revealerSortType2",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
                                                      "Inaccurate revealers",
-                                                     "Numerical order")))
+                                                     "Numerical order"))),
+          column(width = 2, uiOutput(outputId = "revealerNhoodSelect2"))
         ),
         plotOutput("outRevealersPerNhoodFig2")
       )
@@ -107,7 +108,7 @@ rewardTabset <- function(depths, rewardRange) {
       verticalLayout(
         splitLayout(
           radioButtons(inputId = "rewardFigLogX", label = "x-axis:", inline = TRUE,
-                       selected = "Logarithmic",
+                       selected = "Linear",
                        choices = c("Linear", "Logarithmic")),
           radioButtons(inputId = "rewardFigLogY", label = "y-axis:", inline = TRUE,
                        selected = "Pseudo-logarithmic",
@@ -125,7 +126,8 @@ rewardTabset <- function(depths, rewardRange) {
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "depthWins", depths)),
-          column(width = 6, heightSlider(inputId = "winNhoodFigHeight"))
+          column(width = 6, heightSlider(inputId = "winNhoodFigHeight")),
+          column(width = 2, uiOutput(outputId = "winNhoodSelect"))
         ),
         plotOutput("outWinNhoodFig")
       )

@@ -88,13 +88,16 @@ participationNhoodHistFig <- function(dat) {
 }
 
 
-participationNhoodQuantileFig <- function(dat) {
+participationNhoodQuantileFig <- function(dat, highlightNhood = NA) {
   dat %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(winEvents, predict)) %>%
-    mutate(name = recode(name, "winEvents" = "observed", "predict" = "predicted")) %>%
+    mutate(name = recode(name, "winEvents" = "observed",
+                         "predict" = "null expectation")) %>%
+    mutate(name = fct_relevel(name, "observed")) %>%
     ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_step() +
+    geom_hline(yintercept = highlightNhood, alpha = 0.5, linetype = "dashed") +
     labs(x = "number of win events", y = "neighbourhood") +
     scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
@@ -119,7 +122,8 @@ rewardNhoodFig <- function(dat) {
 nodesPerNhoodHistFig <- function(dat) {
   dat %>%
     pivot_longer(cols = !num) %>%
-    mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
+    mutate(name = recode(name, "n" = "observed", "predict" = "null expectation")) %>%
+    mutate(name = fct_relevel(name, "observed")) %>%
     ggplot(aes(x = as_factor(num), y = value,
                colour = name, fill = name, alpha = name)) +
     geom_col(position = "identity", na.rm = TRUE) +
@@ -135,7 +139,8 @@ nodesPerNhoodQuantileFig <- function(dat) {
   dat %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(n, predict)) %>%
-    mutate(name = recode(name, "n" = "observed", "predict" = "predicted")) %>%
+    mutate(name = recode(name, "n" = "observed", "predict" = "null expectation")) %>%
+    mutate(name = fct_relevel(name, "observed")) %>%
     ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
     geom_step() +
     labs(x = "number of nodes", y = "neighbourhood") +
@@ -162,7 +167,7 @@ winNodeNhoodFig <- function(dat, sortBy = "wins") {
 
 
 revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA,
-                                 highlight = NA) {
+                                 highlightNhood = NA) {
   dat %>%
     arrange(if (sortBy == "Honest revealers") honest else
       if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
@@ -171,7 +176,7 @@ revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA,
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
     ggplot(aes(x = value, y = nhood, colour = `revealer type`, fill = `revealer type`)) +
     geom_col(alpha = 0.5) +
-    geom_hline(yintercept = highlight, alpha = 0.5, linetype = "dashed") +
+    geom_hline(yintercept = highlightNhood, alpha = 0.5, linetype = "dashed") +
     labs(x = xlab, y = "neighbourhood") +
     scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +

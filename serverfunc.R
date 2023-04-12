@@ -28,7 +28,7 @@ outPriceTab <- function(dat, roundRange = NA, inaccFilt = "Show all rounds") {
 
 outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
                                     revealerSortType = "Numerical order",
-                                    highlight = NA) {
+                                    highlightNhood = NA) {
   fname <- case_when(
     identical(.f, mean) ~ "mean ",
     identical(.f, sum) ~ "total ",
@@ -38,7 +38,7 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
   restrictRoundsDepth(dat, roundRange, depth) %>%
     filter(!(roundNumber %in% roundsWithoutWinner(.))) %>%
     revealerNhoodSummary(.f) %>%
-    revealersPerNhoodFig(revealerSortType, xlab, highlight)
+    revealersPerNhoodFig(revealerSortType, xlab, highlightNhood)
 }
 
 
@@ -118,10 +118,10 @@ outRewardFig <- function(dat, roundRange = NA, xrange = range(dat$rewardAmount),
 }
 
 
-outWinNhoodFig <- function(dat, roundRange = NA, depth = 8) {
+outWinNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     winsByNhood() %>%
-    participationNhoodQuantileFig()
+    participationNhoodQuantileFig(highlightNhood)
 }
 
 

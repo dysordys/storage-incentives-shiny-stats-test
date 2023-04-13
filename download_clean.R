@@ -83,3 +83,8 @@ mergeData <- function(data1, data2) {
     distinct() %>%
     arrange(roundNumber)
 }
+
+
+fetchNhoodJson <- function(url = "https://api.swarmscan.io/v1/network/stats") {
+  fetchJson(url)
+}

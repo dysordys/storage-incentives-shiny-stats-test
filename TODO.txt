@@ -11,4 +11,4 @@
 
 - Ability to select one neighbourhood (by binary code) to highlight
 
-- "predicted" -> "null"
+- Janos's new data: what do the counts per nhood mean, compared to what we can already glean from the data?

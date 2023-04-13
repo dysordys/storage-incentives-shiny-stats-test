@@ -27,9 +27,9 @@ restrictRounds <- function(dat, roundRange) {
 
 restrictRoundsDepth <- function(dat, roundRange, depths) {
   dat %>%
-  { if (isValidRoundRange(roundRange))
-    filter(., roundNumber %in% reduce(round(roundRange), `:`)) else .
-  } %>%
+    { if (isValidRoundRange(roundRange))
+      filter(., roundNumber %in% reduce(round(roundRange), `:`)) else .
+    } %>%
     filter(depth %in% depths)
 }
 
@@ -315,4 +315,36 @@ roundsWithDepthMismatch <- function(dat) {
     summarise(diff = sum(eq)) %>%
     filter(diff != 0) %>%
     pull(roundNumber)
+}
+
+
+jsonNhoodNodes <- function(jsonHnood) jsonNhood$count
+
+
+jsonNhoodUnreachableNodes <- function(jsonNhood) jsonNhood$unreachableCount
+
+
+jsonNhoodTibble <- function(jsonNhood, variable) {
+  as_tibble(jsonNhood[[variable]], .name_repair = "unique") %>%
+    pivot_longer(cols = everything(), values_to = "nodes") %>%
+    mutate(name = if_else(str_detect(name, "\\.\\.\\.\\d"), "", name))
+}
+
+
+jsonNhoodUserAgents <- function(jsonNhood) {
+  jsonNhoodTibble(jsonNhood, "userAgents") %>%
+    rename(agent = name)
+}
+
+
+jsonNhoodCountries <- function(jsonNhood) {
+  jsonNhoodTibble(jsonNhood, "countries") %>%
+    rename(country = name)
+}
+
+
+jsonNhoodNhoods <- function(jsonNhood) {
+  jsonNhoodTibble(jsonNhood, "neighborhoods") %>%
+    rename(nhood = name) %>%
+    mutate(nhood = str_remove(nhood, "0b"))
 }

@@ -37,23 +37,25 @@ outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "Show all round
     nest(overlays = !roundNumber & !event) %>%
     mutate(overlays = map(overlays, ~.$overlay)) %>%
     pivot_wider(names_from = event, values_from = overlays) %>%
-    mutate(`revealed but not committed` = map2(revealed, committed, setdiff)) %>%
-    mutate(`committed but not revealed` = map2(committed, revealed, setdiff)) %>%
-    mutate(l1 = map_int(`revealed but not committed`, length)) %>%
-    mutate(l2 = map_int(`committed but not revealed`, length)) %>%
-    filter(l1 != 0 | l2 != 0) %>%
-    select(-l1, -l2) %>%
+    mutate(revealNoCommit = map2(revealed, committed, setdiff)) %>%
+    mutate(commitNoReveal = map2(committed, revealed, setdiff)) %>%
+    mutate(numRevealNoCommit = map_int(revealNoCommit, length)) %>%
+    mutate(numCommitNoReveal = map_int(commitNoReveal, length)) %>%
+    filter(numRevealNoCommit != 0 | numCommitNoReveal != 0) %>%
+    select(-numRevealNoCommit, -numCommitNoReveal) %>%
     mutate(revealed = map_int(revealed, length)) %>%
     mutate(committed = map_int(committed, length)) %>%
-    mutate(`revealed but not committed` = map_chr(`revealed but not committed`, str_c,
-                                                  collapse = "\n")) %>%
-    mutate(`committed but not revealed` = map_chr(`committed but not revealed`, str_c,
-                                                  collapse = "\n")) %>%
+    mutate(revealNoCommit = map_chr(revealNoCommit, str_c, collapse = "\n")) %>%
+    mutate(commitNoReveal = map_chr(commitNoReveal, str_c, collapse = "\n")) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(inaccurate = revealed - honest) %>%
     { if (inaccFilt == "Show all rounds") . else filter(., inaccurate > 0) } %>%
-    transmute(round = roundNumber, revealed, `inaccurately revealed` = inaccurate,
-              committed, `revealed but not committed`, `committed but not revealed`)
+    transmute(`round` = roundNumber,
+              `reveals` = revealed,
+              `commits` = committed,
+              `inaccurate reveals` = inaccurate,
+              `reveals without commit` = revealNoCommit,
+              `commits without reveal` = commitNoReveal)
 }
 
 
@@ -118,10 +120,11 @@ outWinNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA)
 }
 
 
-outWinNodeNhoodFig <- function(dat, roundRange = NA, depth = 8, sortBy = "wins") {
+outWinNodeNhoodFig <- function(dat, roundRange = NA, depth = 8, sortBy = "wins",
+                               highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     winsNodesByNhood(roundRange, depth) %>%
-    winNodeNhoodFig(sortBy)
+    winNodeNhoodFig(sortBy, highlightNhood)
 }
 
 
@@ -132,10 +135,10 @@ outWinDistrFig <- function(dat, roundRange = NA, depth = 8) {
 }
 
 
-outRewardNhoodFig <- function(dat, roundRange = NA, depth = 8) {
+outRewardNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     rewardNhoodDistr() %>%
-    rewardNhoodFig()
+    rewardNhoodFig(highlightNhood)
 }
 
 
@@ -161,10 +164,10 @@ outDepthFig <- function(dat, roundRange = NA, log.y = "Logarithmic y-axis") {
 }
 
 
-outNodesPerNhoodFig <- function(dat, roundRange = NA, depth = 8) {
+outNodesPerNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     nodesByNhoodRank() %>%
-    nodesPerNhoodQuantileFig()
+    nodesPerNhoodQuantileFig(highlightNhood)
 }
 
 
@@ -175,10 +178,10 @@ outNodeDistrFig <- function(dat, roundRange = NA, depth = 8) {
 }
 
 
-outStakesNhoodFig <- function(dat, roundRange = NA, depth = 8) {
+outStakesNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     rewardNhoodDistr() %>%
-    stakesNhoodQuantileFig()
+    stakesNhoodQuantileFig(highlightNhood)
 }
 
 
@@ -189,10 +192,10 @@ outStakesNodeFig <- function(dat, roundRange = NA, depth = 8) {
 }
 
 
-outStakedNodesFig <- function(dat, roundRange = NA, depth = 8) {
+outStakedNodesFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
     stakedNodesPerNhood() %>%
     arrange(stakedNodes) %>%
     rowid_to_column("rank") %>%
-    stakedNodesFig()
+    stakedNodesFig(highlightNhood)
 }

@@ -24,7 +24,7 @@ nhoodSelect <- function(inputId, depth) {
 revealerTabset <- function(depths) {
   tabsetPanel(
     tabPanel(
-      title = "Mean revealers per nhood",
+      title = "Mean revealers per neighbourhood",
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "revealerNhoodDepth", depths)),
@@ -40,7 +40,7 @@ revealerTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Total revealers per nhood",
+      title = "Total revealers per neighbourhood",
       verticalLayout(
         fluidRow(
           column(width = 2, depthSelect(inputId = "revealerNhoodDepth2", depths)),
@@ -56,16 +56,6 @@ revealerTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Revealer table",
-      verticalLayout(
-        radioButtons(inputId = "inaccFilt", label = NULL,
-                     choices = c("Show all rounds",
-                                 "Only show rounds with inaccurate revealers")),
-        textOutput("outInacc"),
-        tableOutput("outPriceTab")
-      )
-    ),
-    tabPanel(
       title = "Price change",
       verticalLayout(plotOutput("outPriceFig"))
     ),
@@ -73,7 +63,13 @@ revealerTabset <- function(depths) {
       title = "Reveals vs. commits",
       tags$html(tags$body(p(str_c("Table showing rounds where there is a mismatch ",
                                   "between revealers and committers")))),
-      verticalLayout(tableOutput("outRevealCommitTab"))
+      verticalLayout(
+        radioButtons(inputId = "inaccFilt", label = NULL,
+                     choices = c("Show all rounds",
+                                 "Only show rounds with inaccurate revealers")),
+        textOutput("outInacc"),
+        tableOutput("outRevealCommitTab")
+      )
     ),
   )
 }

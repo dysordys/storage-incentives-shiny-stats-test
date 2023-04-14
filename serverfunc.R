@@ -1,8 +1,8 @@
 outPriceFig <- function(dat, roundRange = NA) {
-  pricePerRound(dat) %>%
+  restrictRounds(dat, roundRange) %>%
+    pricePerRound() %>%
     mutate(inaccurate = revealers - honest) %>%
     mutate(price = price / first(price)) %>%
-    restrictRounds(roundRange) %>%
     priceFig()
 }
 
@@ -11,18 +11,6 @@ outInaccurate <- function(dat, roundRange = NA) {
   s <- inaccurateRevealerStats(restrictRounds(dat, roundRange))
   str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
         ", or ", round(100 * s$p, 2), "%")
-}
-
-
-outPriceTab <- function(dat, roundRange = NA, inaccFilt = "Show all rounds") {
-  pricePerRound(dat) %>%
-    mutate(inaccurate = revealers - honest, price = price / first(price)) %>%
-    { if (inaccFilt == "Show all rounds") . else filter(., inaccurate > 0) } %>%
-    restrictRounds(roundRange) %>%
-    transmute(round = roundNumber,
-              `price (in units of the initial value)` = price,
-              `number of revealers` = revealers,
-              `inaccurate revealers` = inaccurate)
 }
 
 
@@ -42,7 +30,7 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
 }
 
 
-outRevealCommitTab <- function(dat, roundRange = NA) {
+outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "Show all rounds") {
   restrictRounds(dat, roundRange) %>%
     select(roundNumber, event, overlay) %>%
     filter(event != "won") %>%
@@ -60,7 +48,12 @@ outRevealCommitTab <- function(dat, roundRange = NA) {
     mutate(`revealed but not committed` = map_chr(`revealed but not committed`, str_c,
                                                   collapse = "\n")) %>%
     mutate(`committed but not revealed` = map_chr(`committed but not revealed`, str_c,
-                                                  collapse = "\n"))
+                                                  collapse = "\n")) %>%
+    left_join(revealersPerRound(dat), by = "roundNumber") %>%
+    mutate(inaccurate = revealed - honest) %>%
+    { if (inaccFilt == "Show all rounds") . else filter(., inaccurate > 0) } %>%
+    transmute(round = roundNumber, revealed, `inaccurately revealed` = inaccurate,
+              committed, `revealed but not committed`, `committed but not revealed`)
 }
 
 

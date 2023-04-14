@@ -20,7 +20,7 @@ priceFig <- function(dat, maxPoints = 3001) {
     geom_line(aes(y = honest * yscale), colour = "goldenrod", alpha = 0.2) +
     geom_smooth(aes(y = price), colour = "steelblue", se = FALSE) +
     geom_smooth(aes(y = honest * yscale), colour = "goldenrod", se = FALSE) +
-    labs(x = "round", y = "price (blue, in units of initial value)") +
+    labs(x = "round", y = "relative price change (blue)") +
     scale_y_continuous(sec.axis = sec_axis(name = "honest revealers (yellow)",
                                            function(y) y / yscale,
                                            breaks = seq(0, max(dat$honest), by = 2))) +

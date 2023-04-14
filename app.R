@@ -16,8 +16,8 @@ ui <- fluidPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
                  min = min(dat$roundNumber), max = max(dat$roundNumber),
-                 # 672 rounds = 1 week(?):
-                 value = c(max(dat$roundNumber) - 672, max(dat$roundNumber))),
+                 # 2880 rounds = 30 days(?):
+                 value = c(max(dat$roundNumber) - 2880, max(dat$roundNumber))),
     tabPanel(title = "Revealers", revealerTabset(depths(dat))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
     tabPanel(title = "Rewards", rewardTabset(depths(dat), rewardRange(dat))),
@@ -35,10 +35,9 @@ server <- function(input, output) {
     dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
     input$depthSelectRevealersPerNhood2), height=reactive(input$revealerNhoodFigHeight2))
   output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
-  output$outPriceTab <- renderTable(outPriceTab(dat, input$roundRange, input$inaccFilt),
-                                    na = "")
   output$outPriceFig <- renderPlot(outPriceFig(dat, input$roundRange))
-  output$outRevealCommitTab <- renderTable(outRevealCommitTab(dat, input$roundRange))
+  output$outRevealCommitTab <- renderTable(outRevealCommitTab(
+    dat, input$roundRange, input$inaccFilt), na = "")
   output$outNumSkipped <- renderText(outNumSkipped(dat, input$roundRange))
   output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))
   output$outSkippedFig <- renderPlot(outSkippedFig(dat, input$roundRange))

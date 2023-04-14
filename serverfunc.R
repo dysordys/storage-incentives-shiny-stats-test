@@ -30,7 +30,7 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
 }
 
 
-outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "Show all rounds") {
+outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "") {
   restrictRounds(dat, roundRange) %>%
     select(roundNumber, event, overlay) %>%
     filter(event != "won") %>%
@@ -41,15 +41,20 @@ outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "Show all round
     mutate(commitNoReveal = map2(committed, revealed, setdiff)) %>%
     mutate(numRevealNoCommit = map_int(revealNoCommit, length)) %>%
     mutate(numCommitNoReveal = map_int(commitNoReveal, length)) %>%
-    filter(numRevealNoCommit != 0 | numCommitNoReveal != 0) %>%
-    select(-numRevealNoCommit, -numCommitNoReveal) %>%
     mutate(revealed = map_int(revealed, length)) %>%
     mutate(committed = map_int(committed, length)) %>%
     mutate(revealNoCommit = map_chr(revealNoCommit, str_c, collapse = "\n")) %>%
     mutate(commitNoReveal = map_chr(commitNoReveal, str_c, collapse = "\n")) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(inaccurate = revealed - honest) %>%
-    { if (inaccFilt == "Show all rounds") . else filter(., inaccurate > 0) } %>%
+    { if (inaccFilt == "Rounds with inaccurate revealers") {
+      filter(., inaccurate > 0)
+    } else if (inaccFilt == "Rounds with reveal-commit mismatch") {
+      filter(., numRevealNoCommit != 0 | numCommitNoReveal != 0)
+    } else if (inaccFilt=="Rounds with inaccurate revealers or reveal-commit mismatch") {
+      filter(., inaccurate > 0 | (numRevealNoCommit != 0 | numCommitNoReveal != 0))
+    } else .
+    } %>%
     transmute(`round` = roundNumber,
               `reveals` = revealed,
               `commits` = committed,

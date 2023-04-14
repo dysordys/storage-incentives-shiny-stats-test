@@ -67,12 +67,14 @@ revealerTabset <- function(depths) {
     ),
     tabPanel(
       title = "Reveals vs. commits",
-      tags$html(tags$body(p(str_c("Table showing rounds where there is a mismatch ",
-                                  "between revealers and committers")))),
       verticalLayout(
-        radioButtons(inputId = "inaccFilt", label = NULL,
-                     choices = c("Show all rounds",
-                                 "Only show rounds with inaccurate revealers")),
+        radioButtons(inputId = "inaccFilt", label = "Show:",
+                     choices = c(
+                       "All rounds",
+                       "Rounds with inaccurate revealers",
+                       "Rounds with reveal-commit mismatch",
+                       "Rounds with inaccurate revealers or reveal-commit mismatch"
+                     )),
         textOutput("outInacc"),
         tableOutput("outRevealCommitTab")
       )

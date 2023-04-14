@@ -22,11 +22,11 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
     identical(.f, sum) ~ "total ",
     TRUE ~ ""
   )
-  xlab <- str_c(fname, "number of revealers")
+  ylab <- str_c(fname, "number of revealers")
   restrictRoundsDepth(dat, roundRange, depth) %>%
     filter(!(roundNumber %in% roundsWithoutWinner(.))) %>%
     revealerNhoodSummary(.f) %>%
-    revealersPerNhoodFig(revealerSortType, xlab, highlightNhood)
+    revealersPerNhoodFig(revealerSortType, ylab, highlightNhood)
 }
 
 

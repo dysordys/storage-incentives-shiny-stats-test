@@ -30,10 +30,10 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
-    input$nhoodSelRevealersPerNhood), height = reactive(input$revealerNhoodFigHeight))
+    input$nhoodSelRevealersPerNhood), width = reactive(input$revealerNhoodFigWidth))
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
     dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
-    input$nhoodSelRevealersPerNhood2), height=reactive(input$revealerNhoodFigHeight2))
+    input$nhoodSelRevealersPerNhood2), width = reactive(input$revealerNhoodFigWidth2))
   output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
   output$outPriceFig <- renderPlot(outPriceFig(dat, input$roundRange))
   output$outRevealCommitTab <- renderTable(outRevealCommitTab(
@@ -48,32 +48,32 @@ server <- function(input, output) {
     dat, input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
   output$outWinNhoodFig <- renderPlot(outWinNhoodFig(
     dat, input$roundRange, input$depthWins, input$nhoodSelWinNhood),
-    height = reactive(input$winNhoodFigHeight))
+    width = reactive(input$winNhoodFigWidth))
   output$outWinDistrFig <- renderPlot(outWinDistrFig(
     dat, input$roundRange, input$depthWD))
   output$outRewardNhoodFig <- renderPlot(outRewardNhoodFig(
     dat, input$roundRange, input$depthTR, input$nhoodSelTotalReward),
-    height = reactive(input$rewardNhoodFigHeight))
+    width = reactive(input$rewardNhoodFigWidth))
   output$outRewardNodeFig <- renderPlot(outRewardNodeFig(dat, input$roundRange),
-                                        height = reactive(input$rewardNodeFigHeight))
+                                        width = reactive(input$rewardNodeFigWidth))
   output$outDepthTab <- renderTable(outDepthTab(dat, input$roundRange))
   output$outDepthFig <- renderPlot(outDepthFig(dat, input$roundRange, input$depthLogY))
   output$outNodesPerNhoodFig <- renderPlot(outNodesPerNhoodFig(
     dat, input$roundRange, input$depthNodes, input$nhoodSelNodesPerNhood),
-    height = reactive(input$nodeFigHeight))
+    width = reactive(input$nodeFigWidth))
   output$outWinsNodesPerNhoodFig <- renderPlot(outWinNodeNhoodFig(
     dat, input$roundRange, input$depthWinsNodes, input$sortWinNode,
-    input$nhoodSelWinNode), height = reactive(input$winNodeFigHeight))
+    input$nhoodSelWinNode), width = reactive(input$winNodeFigWidth))
   output$outNodeDistrFig <- renderPlot(outNodeDistrFig(
     dat, input$roundRange, input$depthNodes2))
   output$outStakesNhoodFig <- renderPlot(outStakesNhoodFig(
     dat, input$roundRange, input$depthStakes, input$nhoodSelStake),
-    height = reactive(input$stakeFigHeight))
+    width = reactive(input$stakeFigWidth))
   output$outStakesNodeFig <- renderPlot(outStakesNodeFig(
     dat, input$roundRange, input$depthStakes2))
   output$outStakedNodesFig <- renderPlot(outStakedNodesFig(
     dat, input$roundRange, input$depthStakes3, input$nhoodSelStakedNodes),
-    height = reactive(input$stakedNodesFigHeight))
+    width = reactive(input$stakedNodesFigWidth))
 
   # Reactive UI elements - neighbourhood selection:
   output$revealerNhoodSelect <- renderUI(nhoodSelect(

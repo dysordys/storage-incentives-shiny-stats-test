@@ -8,3 +8,5 @@
 - Mapping round range slider to calendar time
 
 - Janos's new data: what do the counts per nhood mean, compared to what we can already glean from the data?
+
+- Reveals vs commits: fix radio buttons

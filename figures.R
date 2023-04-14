@@ -1,9 +1,10 @@
-themeApp <- function(size = 18, margin = c(0.2, 2, 0.2, 0.2), nhood.y = FALSE) {
+themeApp <- function(size = 18, margin = c(0.2, 2, 0.2, 0.2), nhood.x = FALSE) {
   theme_bw(base_size = size) +
-    { if (nhood.y) {
-      theme(axis.text.y = element_text(size = 9, family = "mono"),
+    { if (nhood.x) {
+      theme(axis.text.x = element_text(size = 9, family = "mono",
+                                       angle = 90, vjust = 0.5, hjust = 1),
             legend.position = "top", plot.margin = unit(margin, "cm"),
-            panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank())
+            panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank())
     } else {
       theme(plot.margin = unit(margin, "cm"))
     }
@@ -11,8 +12,8 @@ themeApp <- function(size = 18, margin = c(0.2, 2, 0.2, 0.2), nhood.y = FALSE) {
 }
 
 
-nhoodHighlight <- function(yintercept = NA, alpha = 0.5, linetype = "dashed", ...) {
-  geom_hline(yintercept = yintercept, alpha = alpha, linetype = linetype)
+nhoodHighlight <- function(xintercept = NA, alpha = 0.5, linetype = "dashed", ...) {
+  geom_vline(xintercept = xintercept, alpha = alpha, linetype = linetype)
 }
 
 
@@ -100,13 +101,12 @@ participationNhoodQuantileFig <- function(dat, highlightNhood = NA) {
     mutate(name = recode(name, "winEvents" = "observed",
                          "predict" = "null expectation")) %>%
     mutate(name = fct_relevel(name, "observed")) %>%
-    ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
+    ggplot(aes(x = nhood, y = value, colour = name, group = name)) +
     geom_step() +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = "number of win events", y = "neighbourhood") +
-    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "number of win events") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
-    themeApp(nhood.y = TRUE)
+    themeApp(nhood.x = TRUE)
 }
 
 
@@ -116,12 +116,11 @@ rewardNhoodFig <- function(dat, highlightNhood = NA) {
     arrange(observed) %>%
     rowid_to_column("rank") %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
-    ggplot(aes(x = observed, y = nhood, group = 0)) +
+    ggplot(aes(x = nhood, y = observed, group = 0)) +
     geom_step(colour = "steelblue") +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = "sum of rewards (BZZ)", y = "neighbourhood") +
-    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
-    themeApp(nhood.y = TRUE)
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "sum of rewards (BZZ)") +
+    themeApp(nhood.x = TRUE)
 }
 
 
@@ -147,13 +146,12 @@ nodesPerNhoodQuantileFig <- function(dat, highlightNhood = NA) {
     pivot_longer(cols = c(n, predict)) %>%
     mutate(name = recode(name, "n" = "observed", "predict" = "null expectation")) %>%
     mutate(name = fct_relevel(name, "observed")) %>%
-    ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
+    ggplot(aes(x = nhood, y = value, colour = name, group = name)) +
     geom_step() +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = "number of nodes", y = "neighbourhood") +
-    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "number of nodes") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod")) +
-    themeApp(nhood.y = TRUE)
+    themeApp(nhood.x = TRUE)
 }
 
 
@@ -163,18 +161,17 @@ winNodeNhoodFig <- function(dat, sortBy = "wins", highlightNhood = NA) {
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     rename(`win events` = winEvents) %>%
     pivot_longer(cols = c(nodes, `win events`)) %>%
-    ggplot(aes(x = value, y = nhood, colour = name, group = name)) +
+    ggplot(aes(x = nhood, y = value, colour = name, group = name)) +
     geom_point(alpha = 0.5) +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = "number of nodes / wins", y = "neighbourhood") +
-    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "number of nodes / wins") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod"),
                         guide = guide_legend(override.aes = list(alpha = 1))) +
-    themeApp(nhood.y = TRUE)
+    themeApp(nhood.x = TRUE)
 }
 
 
-revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA,
+revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", ylab = NA,
                                  highlightNhood = NA) {
   dat %>%
     arrange(if (sortBy == "Honest revealers") honest else
@@ -182,14 +179,13 @@ revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", xlab = NA,
     rowid_to_column("rank") %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
-    ggplot(aes(x = value, y = nhood, colour = `revealer type`, fill = `revealer type`)) +
+    ggplot(aes(x = nhood, y = value, colour = `revealer type`, fill = `revealer type`)) +
     geom_col(alpha = 0.5) +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = xlab, y = "neighbourhood") +
-    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = ylab) +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
     scale_fill_manual(values = c("steelblue", "goldenrod")) +
-    themeApp(nhood.y = TRUE)
+    themeApp(nhood.x = TRUE)
 }
 
 
@@ -198,7 +194,7 @@ stakesNhoodHistFig <- function(dat) {
     rename(observed = totalStake) %>%
     ggplot(aes(x = observed)) +
     geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 80) +
-    scale_x_log10(name = "sum of stakes (BZZ)", labels = scales::label_log()) +
+    scale_x_log10(name = "sum of stakes (BZZ)") +
     themeApp()
 }
 
@@ -209,13 +205,12 @@ stakesNhoodQuantileFig <- function(dat, highlightNhood = NA) {
     arrange(observed) %>%
     rowid_to_column("rank") %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
-    ggplot(aes(x = observed, y = nhood, group = 0)) +
+    ggplot(aes(x = nhood, y = observed, group = 0)) +
     geom_step(colour = "steelblue") +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = "sum of stakes (BZZ)", y = "neighbourhood") +
-    scale_x_log10(expand = expansion(mult = c(0.01, 0.05)),
-                  labels = scales::label_log()) +
-    themeApp(nhood.y = TRUE)
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "sum of stakes (BZZ)") +
+    scale_y_log10() +
+    themeApp(nhood.x = TRUE)
 }
 
 
@@ -223,11 +218,12 @@ rewardPerNodeFig <- function(dat) {
   dat %>%
     arrange(reward) %>%
     rowid_to_column("rank") %>%
-    ggplot(aes(x = reward, y = rank)) +
+    ggplot(aes(x = rank, y = reward)) +
     geom_step(colour = "steelblue") +
-    scale_x_log10(name = "sum of rewards (BZZ)", labels = scales::label_log()) +
-    scale_y_continuous(name = "nodes (in increasing order of total reward)") +
-    themeApp()
+    scale_x_continuous(name = "nodes (in increasing order of total reward)") +
+    scale_y_log10(name = "sum of rewards (BZZ)") +
+    themeApp() +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }
 
 
@@ -244,10 +240,9 @@ depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
 stakedNodesFig <- function(dat, highlightNhood = NA) {
   dat %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
-    ggplot(aes(x = stakedNodes, y = nhood, group = 0)) +
+    ggplot(aes(x = nhood, y = stakedNodes, group = 0)) +
     geom_step(colour = "steelblue") +
-    nhoodHighlight(yintercept = highlightNhood) +
-    labs(x = "number of staked nodes", y = "neighbourhood") +
-    scale_x_continuous(expand = expansion(mult = c(0.01, 0.05))) +
-    themeApp(nhood.y = TRUE)
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "number of staked nodes") +
+    themeApp(nhood.x = TRUE)
 }

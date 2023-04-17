@@ -26,6 +26,7 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
   restrictRoundsDepth(dat, roundRange, depth) %>%
     filter(!(roundNumber %in% roundsWithoutWinner(.))) %>%
     revealerNhoodSummary(.f) %>%
+    filter(!is.na(nhood)) %>%
     revealersPerNhoodFig(revealerSortType, ylab, highlightNhood)
 }
 

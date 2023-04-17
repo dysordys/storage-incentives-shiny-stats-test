@@ -1,7 +1,7 @@
 themeApp <- function(size = 18, margin = c(0.2, 2, 0.2, 0.2), nhood.x = FALSE) {
   theme_bw(base_size = size) +
     { if (nhood.x) {
-      theme(axis.text.x = element_text(size = 9, family = "mono",
+      theme(axis.text.x = element_text(size = 8, family = "mono",
                                        angle = 90, vjust = 0.5, hjust = 1),
             legend.position = "top", plot.margin = unit(margin, "cm"),
             panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank())
@@ -53,30 +53,24 @@ skippedRoundDistrFig <- function(dat) {
 }
 
 
-rewardDistrFig <- function(dat, xrange = c(NA, NA),
-                           log.x = "Logarithmic", log.y = "Pseudo-logarithmic") {
-  xScale <- function(dat, log.x, xrange) {
-    if (log.x == "Logarithmic") {
+rewardDistrFig <- function(dat, xrange = c(NA, NA), xtrans = "Logarithmic",
+                           ytrans = "Square-root transformed") {
+  xScale <- function(dat, xtrans, xrange) {
+    if (xtrans == "Logarithmic") {
       if (xrange[1] == 0) xrange[1] <- 0.9 * min(dat$rewardAmount)
-      scale_x_log10(name = "reward (BZZ)", limits = xrange, labels = scales::label_log())
+      scale_x_log10(name = "reward (BZZ)", limits = xrange)
     } else {
       scale_x_continuous(name = "reward (BZZ)", limits = xrange)
     }
   }
-  plt <- dat %>%
+  dat %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
-    xScale(dat, log.x, xrange) +
+    xScale(dat, xtrans, xrange) +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
                       name = "skipped\nrounds") +
+    { if (ytrans == "Square-root transformed") scale_y_sqrt() } +
     themeApp()
-  ymax <- layer_scales(plt, 1, 1)$y$range$range[2]
-  if (log.y == "Pseudo-logarithmic") {
-    plt + scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
-                             breaks = 10^(0:ceiling(log10(ymax))))
-  } else {
-    plt
-  }
 }
 
 

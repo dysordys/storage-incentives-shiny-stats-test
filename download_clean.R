@@ -36,6 +36,8 @@ cleanData <- function(jsonDat) {
     mutate(events = map(events, reshapeEvents)) %>%
     unnest(events) %>%
     distinct() %>% # Remove occasional repeated records across files
+    mutate(rewardAmount = rewardAmount / 1e16,
+           stake = stake / 1e16) %>% # Convert PLUR to BZZ
     arrange(roundNumber)
 }
 

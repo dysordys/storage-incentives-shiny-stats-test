@@ -1,6 +1,6 @@
 roundsSlider <- function(inputId = "roundRange", min, max, value) {
   sliderInput(inputId, label = "Range of rounds",
-              min = min, max = max, value = value, width = "90%")
+              min = min, max = max, value = value, width = "95%")
 }
 
 
@@ -68,12 +68,12 @@ revealerTabset <- function(depths) {
     tabPanel(
       title = "Reveals vs. commits",
       verticalLayout(
-        radioButtons(inputId = "inaccFilt", label = "Show:",
+        radioButtons(inputId = "inaccFilt", label = "Filter rounds for:",
                      choices = c(
-                       "All rounds",
-                       "Rounds with inaccurate revealers",
-                       "Rounds with reveal-commit mismatch",
-                       "Rounds with inaccurate revealers or reveal-commit mismatch"
+                       "No filter",
+                       "Inaccurate revealers",
+                       "Reveal-commit mismatch",
+                       "Inaccurate revealers or reveal-commit mismatch"
                      )),
         textOutput("outInacc"),
         tableOutput("outRevealCommitTab")
@@ -115,8 +115,8 @@ rewardTabset <- function(depths, rewardRange) {
                        selected = "Linear",
                        choices = c("Linear", "Logarithmic")),
           radioButtons(inputId = "rewardFigLogY", label = "y-axis:", inline = TRUE,
-                       selected = "Pseudo-logarithmic",
-                       choices = c("Linear", "Pseudo-logarithmic"))
+                       selected = "Square-root transformed",
+                       choices = c("Linear", "Square-root transformed"))
         ),
         plotOutput("outRewardFig"),
         sliderInput(inputId = "rewardRange", label = "Range of rewards",

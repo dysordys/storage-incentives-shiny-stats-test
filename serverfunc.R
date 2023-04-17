@@ -47,11 +47,11 @@ outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "") {
     mutate(commitNoReveal = map_chr(commitNoReveal, str_c, collapse = "\n")) %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(inaccurate = revealed - honest) %>%
-    { if (inaccFilt == "Rounds with inaccurate revealers") {
+    { if (inaccFilt == "Inaccurate revealers") {
       filter(., inaccurate > 0)
-    } else if (inaccFilt == "Rounds with reveal-commit mismatch") {
+    } else if (inaccFilt == "Reveal-commit mismatch") {
       filter(., numRevealNoCommit != 0 | numCommitNoReveal != 0)
-    } else if (inaccFilt=="Rounds with inaccurate revealers or reveal-commit mismatch") {
+    } else if (inaccFilt=="Inaccurate revealers or reveal-commit mismatch") {
       filter(., inaccurate > 0 | (numRevealNoCommit != 0 | numCommitNoReveal != 0))
     } else .
     } %>%
@@ -110,11 +110,11 @@ outSkippedRoundDistrFig <- function(dat, roundRange = NA) {
 
 
 outRewardFig <- function(dat, roundRange = NA, xrange = range(dat$rewardAmount),
-                         log.x = "Logarithmic", log.y = "Pseudo-logarithmic") {
+                         xtrans = "Logarithmic", ytrans = "Square-root transformed") {
   skippedRounds(dat) %>%
     mutate(skip = as_factor(skip)) %>%
     restrictRounds(roundRange) %>%
-    rewardDistrFig(xrange, log.x, log.y)
+    rewardDistrFig(xrange, xtrans, ytrans)
 }
 
 

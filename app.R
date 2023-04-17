@@ -7,8 +7,7 @@ source("serverfunc.R")
 source("uifunc.R")
 
 
-dat <- read_rds("data.rds") %>%
-  mutate(rewardAmount = rewardAmount / 1e16, stake = stake / 1e16) # Convert PLUR to BZZ
+dat <- read_rds("data.rds")
 
 
 ui <- fluidPage(
@@ -16,8 +15,8 @@ ui <- fluidPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
                  min = min(dat$roundNumber), max = max(dat$roundNumber),
-                 # 2880 rounds = 30 days(?):
-                 value = c(max(dat$roundNumber) - 2880, max(dat$roundNumber))),
+                 # 3300 rounds is approximately 30 days:
+                 value = c(max(dat$roundNumber) - 3300, max(dat$roundNumber))),
     tabPanel(title = "Revealers", revealerTabset(depths(dat))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
     tabPanel(title = "Rewards", rewardTabset(depths(dat), rewardRange(dat))),

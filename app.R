@@ -7,73 +7,76 @@ source("serverfunc.R")
 source("uifunc.R")
 
 
-dat <- read_rds("data.rds")
+dataOrig <- read_rds("data.rds")
 
 
 ui <- fluidPage(
   navbarPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
-                 min = min(dat$roundNumber), max = max(dat$roundNumber),
+                 min = min(dataOrig$roundNumber), max = max(dataOrig$roundNumber),
                  # 3300 rounds is approximately 30 days:
-                 value = c(max(dat$roundNumber) - 3300, max(dat$roundNumber))),
-    tabPanel(title = "Revealers", revealerTabset(depths(dat))),
+                 value = c(max(dataOrig$roundNumber) - 3300, max(dataOrig$roundNumber))),
+    tabPanel(title = "Revealers", revealerTabset(depths(dataOrig))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
-    tabPanel(title = "Rewards", rewardTabset(depths(dat), rewardRange(dat))),
-    tabPanel(title = "Nodes", nodeTabset(depths(dat))),
-    tabPanel(title = "Stakes", stakeTabset(depths(dat)))
+    tabPanel(title = "Rewards", rewardTabset(depths(dataOrig), rewardRange(dataOrig))),
+    tabPanel(title = "Nodes", nodeTabset(depths(dataOrig))),
+    tabPanel(title = "Stakes", stakeTabset(depths(dataOrig)))
   )
 )
 
 
 server <- function(input, output) {
+
+  dat <- reactive(restrictRounds(dataOrig, input$roundRange))
+
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
-    dat, input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
+    dat(), input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
     input$nhoodSelRevealersPerNhood),
     width = reactive(input$revealerNhoodFigWidth), height = 500)
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
-    dat, input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
+    dat(), input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
     input$nhoodSelRevealersPerNhood2),
     width = reactive(input$revealerNhoodFigWidth2), height = 500)
-  output$outInacc <- renderText(outInaccurate(dat, input$roundRange))
-  output$outPriceFig <- renderPlot(outPriceFig(dat, input$roundRange))
+  output$outInacc <- renderText(outInaccurate(dat(), input$roundRange))
+  output$outPriceFig <- renderPlot(outPriceFig(dat(), input$roundRange))
   output$outRevealCommitTab <- renderTable(outRevealCommitTab(
-    dat, input$roundRange, input$inaccFilt), na = "")
-  output$outNumSkipped <- renderText(outNumSkipped(dat, input$roundRange))
-  output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat, input$roundRange))
-  output$outSkippedFig <- renderPlot(outSkippedFig(dat, input$roundRange))
-  output$outSkippedTab <- renderTable(outSkippedTab(dat, input$roundRange))
-  output$outSkipDistrTab <- renderTable(outSkippedRoundDistrTab(dat, input$roundRange))
-  output$outSkipDistrFig <- renderPlot(outSkippedRoundDistrFig(dat, input$roundRange))
+    dat(), input$roundRange, input$inaccFilt), na = "")
+  output$outNumSkipped <- renderText(outNumSkipped(dat(), input$roundRange))
+  output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat(), input$roundRange))
+  output$outSkippedFig <- renderPlot(outSkippedFig(dat(), input$roundRange))
+  output$outSkippedTab <- renderTable(outSkippedTab(dat(), input$roundRange))
+  output$outSkipDistrTab <- renderTable(outSkippedRoundDistrTab(dat(), input$roundRange))
+  output$outSkipDistrFig <- renderPlot(outSkippedRoundDistrFig(dat(), input$roundRange))
   output$outRewardFig <- renderPlot(outRewardFig(
-    dat, input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
+    dat(), input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
   output$outWinNhoodFig <- renderPlot(outWinNhoodFig(
-    dat, input$roundRange, input$depthWins, input$nhoodSelWinNhood),
+    dat(), input$roundRange, input$depthWins, input$nhoodSelWinNhood),
     width = reactive(input$winNhoodFigWidth), height = 500)
   output$outWinDistrFig <- renderPlot(outWinDistrFig(
-    dat, input$roundRange, input$depthWD))
+    dat(), input$roundRange, input$depthWD))
   output$outRewardNhoodFig <- renderPlot(outRewardNhoodFig(
-    dat, input$roundRange, input$depthTR, input$nhoodSelTotalReward),
+    dat(), input$roundRange, input$depthTR, input$nhoodSelTotalReward),
     width = reactive(input$rewardNhoodFigWidth), height = 500)
   output$outRewardNodeFig <- renderPlot(outRewardNodeFig(
-    dat, input$roundRange), width = reactive(input$rewardNodeFigWidth), height = 450)
-  output$outDepthTab <- renderTable(outDepthTab(dat, input$roundRange))
-  output$outDepthFig <- renderPlot(outDepthFig(dat, input$roundRange, input$depthLogY))
+    dat(), input$roundRange), width = reactive(input$rewardNodeFigWidth), height = 450)
+  output$outDepthTab <- renderTable(outDepthTab(dat(), input$roundRange))
+  output$outDepthFig <- renderPlot(outDepthFig(dat(), input$roundRange, input$depthLogY))
   output$outNodesPerNhoodFig <- renderPlot(outNodesPerNhoodFig(
-    dat, input$roundRange, input$depthNodes, input$nhoodSelNodesPerNhood),
+    dat(), input$roundRange, input$depthNodes, input$nhoodSelNodesPerNhood),
     width = reactive(input$nodeFigWidth), height = 500)
   output$outWinsNodesPerNhoodFig <- renderPlot(outWinNodeNhoodFig(
-    dat, input$roundRange, input$depthWinsNodes, input$sortWinNode,
+    dat(), input$roundRange, input$depthWinsNodes, input$sortWinNode,
     input$nhoodSelWinNode), width = reactive(input$winNodeFigWidth), height = 500)
   output$outNodeDistrFig <- renderPlot(outNodeDistrFig(
-    dat, input$roundRange, input$depthNodes2))
+    dat(), input$roundRange, input$depthNodes2))
   output$outStakesNhoodFig <- renderPlot(outStakesNhoodFig(
-    dat, input$roundRange, input$depthStakes, input$nhoodSelStake),
+    dat(), input$roundRange, input$depthStakes, input$nhoodSelStake),
     width = reactive(input$stakeFigWidth), height = 500)
   output$outStakesNodeFig <- renderPlot(outStakesNodeFig(
-    dat, input$roundRange, input$depthStakes2))
+    dat(), input$roundRange, input$depthStakes2))
   output$outStakedNodesFig <- renderPlot(outStakedNodesFig(
-    dat, input$roundRange, input$depthStakes3, input$nhoodSelStakedNodes),
+    dat(), input$roundRange, input$depthStakes3, input$nhoodSelStakedNodes),
     width = reactive(input$stakedNodesFigWidth), height = 500)
 
   # Reactive UI elements - neighbourhood selection:

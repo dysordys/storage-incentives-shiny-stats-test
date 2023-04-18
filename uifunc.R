@@ -115,8 +115,8 @@ rewardTabset <- function(depths, rewardRange) {
                        selected = "Linear",
                        choices = c("Linear", "Logarithmic")),
           radioButtons(inputId = "rewardFigLogY", label = "y-axis:", inline = TRUE,
-                       selected = "Square-root transformed",
-                       choices = c("Linear", "Square-root transformed"))
+                       selected = "Pseudo-logarithmic",
+                       choices = c("Linear", "Pseudo-logarithmic"))
         ),
         plotOutput("outRewardFig"),
         sliderInput(inputId = "rewardRange", label = "Range of rewards",

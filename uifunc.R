@@ -48,7 +48,7 @@ revealerTabset <- function(depths) {
       title = "Total revealers per neighbourhood",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "revealerNhoodDepth2", depths)),
+          column(width = 2, uiOutput(outputId = "revealerNhoodDepth2")),
           column(width = 5, widthSlider(inputId = "revealerNhoodFigWidth2")),
           column(width = 3, radioButtons(inputId = "revealerSortType2",
                                          label = "Sort neighbourhoods by:",
@@ -128,7 +128,7 @@ rewardTabset <- function(depths, rewardRange) {
       title = "Wins across nhoods",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "depthWins", depths)),
+          column(width = 2, uiOutput(outputId = "depthWins")),
           column(width = 6, widthSlider(inputId = "winNhoodFigWidth")),
           column(width = 2, uiOutput(outputId = "winNhoodSelect"))
         ),

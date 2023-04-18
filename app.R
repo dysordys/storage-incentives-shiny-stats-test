@@ -35,8 +35,8 @@ server <- function(input, output) {
     input$revealerSortType, input$nhoodSelRevealersPerNhood),
     width = reactive(input$revealerNhoodFigWidth), height = 500)
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
-    dat(), input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
-    input$nhoodSelRevealersPerNhood2),
+    dat(), input$roundRange, input$depthSelRevealersPerNhood2, .f = sum,
+    input$revealerSortType2, input$nhoodSelRevealersPerNhood2),
     width = reactive(input$revealerNhoodFigWidth2), height = 500)
   output$outInacc <- renderText(outInaccurate(dat(), input$roundRange))
   output$outPriceFig <- renderPlot(outPriceFig(dat(), input$roundRange))
@@ -51,7 +51,7 @@ server <- function(input, output) {
   output$outRewardFig <- renderPlot(outRewardFig(
     dat(), input$roundRange, input$rewardRange, input$rewardFigLogX, input$rewardFigLogY))
   output$outWinNhoodFig <- renderPlot(outWinNhoodFig(
-    dat(), input$roundRange, input$depthWins, input$nhoodSelWinNhood),
+    dat(), input$roundRange, input$depthSelWinNhood, input$nhoodSelWinNhood),
     width = reactive(input$winNhoodFigWidth), height = 500)
   output$outWinDistrFig <- renderPlot(outWinDistrFig(
     dat(), input$roundRange, input$depthWD))
@@ -82,15 +82,21 @@ server <- function(input, output) {
   # Reactive UI elements - depth selection:
   output$revealerNhoodDepth <- renderUI(depthSelect(
     inputId = "depthSelRevealersPerNhood", depths = depths(dat())))
+  output$revealerNhoodDepth2 <- renderUI(depthSelect(
+    inputId = "depthSelRevealersPerNhood2", depths = depths(dat())))
+  output$depthWins <- renderUI(depthSelect(
+    inputId = "depthSelWinNhood", depths = depths(dat())))
 
   # Reactive UI elements - neighbourhood selection:
   output$revealerNhoodSelect <- renderUI(nhoodSelect(
     inputId = "nhoodSelRevealersPerNhood",
     nhoods = nhoodList(dat(), as.integer(input$depthSelRevealersPerNhood))))
   output$revealerNhoodSelect2 <- renderUI(nhoodSelect(
-    inputId = "nhoodSelRevealersPerNhood2", as.integer(input$revealerNhoodDepth2)))
+    inputId = "nhoodSelRevealersPerNhood2",
+    nhoods = nhoodList(dat(), as.integer(input$depthSelRevealersPerNhood2))))
   output$winNhoodSelect <- renderUI(nhoodSelect(
-    inputId = "nhoodSelWinNhood", as.integer(input$depthWins)))
+    inputId = "nhoodSelWinNhood",
+    nhoods = nhoodList(dat(), as.integer(input$depthSelWinNhood))))
   output$rewardNhoodSelect <- renderUI(nhoodSelect(
     inputId = "nhoodSelTotalReward", as.integer(input$depthTR)))
   output$nodesPerNhoodSelect <- renderUI(nhoodSelect(

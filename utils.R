@@ -169,7 +169,7 @@ rewardRange <- function(dat) {
 rewardNhoodDistr <- function(dat) {
   dat %>%
     filter(event == "won", !is.na(nhood)) %>%
-    group_by(nhood) %>%
+    group_by(depth, nhood) %>%
     summarise(winEvents = n(),
               totalReward = sum(rewardAmount),
               totalStake = sum(stake)) %>%
@@ -242,9 +242,9 @@ nhoods <- function(dat) {
 }
 
 
-nhoodList <- function(dat, depth) {
+nhoodList <- function(dat, depthVal) {
   dat %>%
-    filter(depth == {{depth}}) %>%
+    filter(depth == depthVal) %>%
     pull(nhood) %>%
     unique() %>%
     R.utils::intToBin()
@@ -265,9 +265,10 @@ rounds <- function(dat) {
 }
 
 
-winEventsTab <- function(dat) {
+winEventsTab <- function(dat, depthVal) {
   dat %>%
     rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
     count(winEvents, name = "observed") %>%
     { if (nrow(.) > 0) right_join(., tibble(winEvents=min(.$winEvents):max(.$winEvents)),
                                   by = "winEvents") else . } %>%
@@ -276,9 +277,10 @@ winEventsTab <- function(dat) {
 }
 
 
-winsByNhood <- function(dat) {
+winsByNhood <- function(dat, depthVal) {
   dat %>%
     rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
     arrange(winEvents) %>%
     rowid_to_column("rank") %>%
     left_join(tibble(

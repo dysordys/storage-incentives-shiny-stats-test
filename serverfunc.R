@@ -120,7 +120,7 @@ outRewardFig <- function(dat, roundRange = NA, xrange = range(dat$rewardAmount),
 
 outWinNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
   restrictRoundsDepth(dat, roundRange, depth) %>%
-    winsByNhood() %>%
+    winsByNhood(depth) %>%
     participationNhoodQuantileFig(highlightNhood)
 }
 

@@ -31,8 +31,8 @@ server <- function(input, output) {
   dat <- reactive(restrictRounds(dataOrig, input$roundRange))
 
   output$outRevealersPerNhoodFig <- renderPlot(outRevealersPerNhoodFig(
-    dat(), input$roundRange, input$revealerNhoodDepth, .f = mean, input$revealerSortType,
-    input$nhoodSelRevealersPerNhood),
+    dat(), input$roundRange, input$depthSelRevealersPerNhood, .f = mean,
+    input$revealerSortType, input$nhoodSelRevealersPerNhood),
     width = reactive(input$revealerNhoodFigWidth), height = 500)
   output$outRevealersPerNhoodFig2 <- renderPlot(outRevealersPerNhoodFig(
     dat(), input$roundRange, input$revealerNhoodDepth2, .f = sum, input$revealerSortType2,
@@ -78,6 +78,10 @@ server <- function(input, output) {
   output$outStakedNodesFig <- renderPlot(outStakedNodesFig(
     dat(), input$roundRange, input$depthStakes3, input$nhoodSelStakedNodes),
     width = reactive(input$stakedNodesFigWidth), height = 500)
+
+  # Reactive UI elements - depth selection:
+  output$revealerNhoodDepth <- renderUI(depthSelect(
+    inputId = "depthSelRevealersPerNhood", depths = depths(dat())))
 
   # Reactive UI elements - neighbourhood selection:
   output$revealerNhoodSelect <- renderUI(nhoodSelect(

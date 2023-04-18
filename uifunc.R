@@ -1,5 +1,5 @@
 roundsSlider <- function(inputId = "roundRange", min, max, value) {
-  sliderInput(inputId, label = "Range of rounds",
+  sliderInput(inputId, label = "Range of rounds", step = 1,
               min = min, max = max, value = value, width = "95%")
 }
 
@@ -33,7 +33,7 @@ revealerTabset <- function(depths) {
       title = "Mean revealers per neighbourhood",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "revealerNhoodDepth", depths)),
+          column(width = 2, uiOutput(outputId = "revealerNhoodDepth")),
           column(width = 5, widthSlider(inputId = "revealerNhoodFigWidth")),
           column(width = 3, radioButtons(inputId = "revealerSortType",
                                          label = "Sort neighbourhoods by:",

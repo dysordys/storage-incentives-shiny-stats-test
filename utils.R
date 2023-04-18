@@ -1,3 +1,6 @@
+`%ni%` <- function(x, y) !(x %in% y)
+
+
 adjustPrice <- function(currentPrice, honestRevealers) {
   minimumPrice <- 2^10
   v <- 0.00294
@@ -26,11 +29,10 @@ restrictRounds <- function(dat, roundRange) {
 
 
 restrictRoundsDepth <- function(dat, roundRange, depths) {
-  dat %>%
-    { if (isValidRoundRange(roundRange))
-      filter(., roundNumber %in% reduce(round(roundRange), `:`)) else .
-    } %>%
-    filter(depth %in% depths)
+  restrictRounds(dat, roundRange) %>%
+    group_by(roundNumber) %>%
+    filter(length(intersect(depths, depth)) > 0) %>%
+    ungroup()
 }
 
 
@@ -208,14 +210,22 @@ rewardPerNode <- function(dat) {
 
 
 depthDistr <- function(dat) {
-  dat %>%
-    filter(!is.na(depth)) %>%
-    count(depth)
+  count(dat, depth)
 }
 
 
 depths <- function(dat) {
   depthDistr(dat) %>%
+    filter(depth > 0) %>%
+    pull(depth)
+}
+
+
+depthsRevealers <- function(dat) {
+  dat %>%
+    filter(roundNumber %ni% roundsWithoutWinner(.)) %>%
+    filter(event == "revealed") %>%
+    depthDistr() %>%
     filter(depth > 0) %>%
     pull(depth)
 }

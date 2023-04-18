@@ -142,6 +142,13 @@ calculateNhoodsDec <- function(dat) {
 }
 
 
+nhoodsDec2Bin <- function(dat, depth) {
+  dat %>%
+    filter(depth == {{depth}}) %>%
+    mutate(nhood = R.utils::intToBin(nhood))
+}
+
+
 proximity <- function(fst, snd) {
   maxPO <- 16L
   b <- min((maxPO - 1) %/% 8 + 1, length(fst))

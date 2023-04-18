@@ -21,9 +21,8 @@ depthSelect <- function(inputId, depths = 1:9) {
 }
 
 
-nhoodSelect <- function(inputId, depth) {
-  selectInput(inputId, label = "Highlight nhood",
-              choices = c("-", R.utils::intToBin(0:(2^depth - 1))))
+nhoodSelect <- function(inputId, nhoods) {
+  selectInput(inputId, label = "Highlight nhood", choices = c("-", nhoods))
 }
 
 

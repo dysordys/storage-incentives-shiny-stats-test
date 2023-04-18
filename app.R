@@ -85,7 +85,8 @@ server <- function(input, output) {
 
   # Reactive UI elements - neighbourhood selection:
   output$revealerNhoodSelect <- renderUI(nhoodSelect(
-    inputId = "nhoodSelRevealersPerNhood", as.integer(input$depthSelRevealersPerNhood)))
+    inputId = "nhoodSelRevealersPerNhood",
+    nhoods = nhoodList(dat(), as.integer(input$depthSelRevealersPerNhood))))
   output$revealerNhoodSelect2 <- renderUI(nhoodSelect(
     inputId = "nhoodSelRevealersPerNhood2", as.integer(input$revealerNhoodDepth2)))
   output$winNhoodSelect <- renderUI(nhoodSelect(

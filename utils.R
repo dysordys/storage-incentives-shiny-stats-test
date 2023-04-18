@@ -142,10 +142,8 @@ calculateNhoodsDec <- function(dat) {
 }
 
 
-nhoodsDec2Bin <- function(dat, depth) {
-  dat %>%
-    filter(depth == {{depth}}) %>%
-    mutate(nhood = R.utils::intToBin(nhood))
+nhoodsDec2Bin <- function(dat) {
+  mutate(dat, nhood = R.utils::intToBin(nhood))
 }
 
 
@@ -241,6 +239,15 @@ depthsRevealers <- function(dat) {
 
 nhoods <- function(dat) {
   length(unique(dat$nhood[!is.na(dat$nhood)]))
+}
+
+
+nhoodList <- function(dat, depth) {
+  dat %>%
+    filter(depth == {{depth}}) %>%
+    pull(nhood) %>%
+    unique() %>%
+    R.utils::intToBin()
 }
 
 

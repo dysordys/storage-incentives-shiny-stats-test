@@ -58,10 +58,11 @@ revealersPerRound <- function(dat) {
 }
 
 
-revealerNhoodSummary <- function(dat, .f = mean) {
+revealerNhoodSummary <- function(dat, .f = mean, depths = 1:9) {
   dat %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(inaccurate = revealers - honest) %>%
+    filter(depth %in% depths) %>%
     group_by(nhood) %>%
     summarise(honest = .f(honest), inaccurate = .f(inaccurate)) %>%
     ungroup()

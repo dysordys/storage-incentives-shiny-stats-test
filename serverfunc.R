@@ -24,7 +24,7 @@ outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
   )
   ylab <- str_c(fname, "number of revealers")
   restrictRoundsDepth(dat, roundRange, depth) %>%
-    revealerNhoodSummary(.f) %>%
+    revealerNhoodSummary(.f, depth) %>%
     filter(!is.na(nhood)) %>%
     revealersPerNhoodFig(revealerSortType, ylab, highlightNhood)
 }

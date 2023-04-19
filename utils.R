@@ -227,6 +227,15 @@ depths <- function(dat) {
 }
 
 
+depthsWinDistr <- function(dat) {
+  dat %>%
+    winEventsTab() %>%
+    pull(depth) %>%
+    unique() %>%
+    sort()
+}
+
+
 depthsRevealers <- function(dat) {
   dat %>%
     filter(roundNumber %ni% roundsWithoutWinner(.)) %>%
@@ -242,11 +251,14 @@ nhoods <- function(dat) {
 }
 
 
-nhoodList <- function(dat, depthVal) {
+nhoodList <- function(dat, depthVal, na.rm = TRUE) {
+  if (length(depthVal) == 0) depthVal <- 8
   dat %>%
     filter(depth == depthVal) %>%
+    filter(if (na.rm) !is.na(nhood) else TRUE) %>%
     pull(nhood) %>%
     unique() %>%
+    sort() %>%
     R.utils::intToBin()
 }
 
@@ -265,11 +277,10 @@ rounds <- function(dat) {
 }
 
 
-winEventsTab <- function(dat, depthVal) {
+winEventsTab <- function(dat) {
   dat %>%
     rewardNhoodDistr() %>%
-    filter(depth == depthVal) %>%
-    count(winEvents, name = "observed") %>%
+    count(depth, winEvents, name = "observed") %>%
     { if (nrow(.) > 0) right_join(., tibble(winEvents=min(.$winEvents):max(.$winEvents)),
                                   by = "winEvents") else . } %>%
     mutate(predicted = unifDistrNull(winEvents, rounds(dat), nhoods(dat)) *
@@ -278,6 +289,7 @@ winEventsTab <- function(dat, depthVal) {
 
 
 winsByNhood <- function(dat, depthVal) {
+  if (length(depthVal) == 0) depthVal <- 8
   dat %>%
     rewardNhoodDistr() %>%
     filter(depth == depthVal) %>%

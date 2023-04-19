@@ -11,6 +11,7 @@ dataOrig <- read_rds("data.rds")
 
 
 ui <- fluidPage(
+  titlePanel("Redistribution game dashboard"),
   navbarPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
@@ -43,7 +44,6 @@ server <- function(input, output) {
   output$outRevealCommitTab <- renderTable(outRevealCommitTab(
     dat(), input$roundRange, input$inaccFilt), na = "")
   output$outNumSkipped <- renderText(outNumSkipped(dat(), input$roundRange))
-  output$outChiSqUnifTxt <- renderText(outChiSqUnifTxt(dat(), input$roundRange))
   output$outSkippedFig <- renderPlot(outSkippedFig(dat(), input$roundRange))
   output$outSkippedTab <- renderTable(outSkippedTab(dat(), input$roundRange))
   output$outSkipDistrTab <- renderTable(outSkippedRoundDistrTab(dat(), input$roundRange))
@@ -54,9 +54,9 @@ server <- function(input, output) {
     dat(), input$roundRange, input$depthSelWinNhood, input$nhoodSelWinNhood),
     width = reactive(input$winNhoodFigWidth), height = 500)
   output$outWinDistrFig <- renderPlot(outWinDistrFig(
-    dat(), input$roundRange, input$depthWD))
+    dat(), input$roundRange, input$depthSelWinDistr))
   output$outRewardNhoodFig <- renderPlot(outRewardNhoodFig(
-    dat(), input$roundRange, input$depthTR, input$nhoodSelTotalReward),
+    dat(), input$roundRange, input$depthSelTotalReward, input$nhoodSelTotalReward),
     width = reactive(input$rewardNhoodFigWidth), height = 500)
   output$outRewardNodeFig <- renderPlot(outRewardNodeFig(
     dat(), input$roundRange), width = reactive(input$rewardNodeFigWidth), height = 450)
@@ -86,6 +86,10 @@ server <- function(input, output) {
     inputId = "depthSelRevealersPerNhood2", depths = depths(dat())))
   output$depthWins <- renderUI(depthSelect(
     inputId = "depthSelWinNhood", depths = depths(dat())))
+  output$depthWD <- renderUI(depthSelect(
+    inputId = "depthSelWinDistr", depths = depthsWinDistr(dat())))
+  output$depthTR <- renderUI(depthSelect(
+    inputId = "depthSelTotalReward", depths = depths(dat())))
 
   # Reactive UI elements - neighbourhood selection:
   output$revealerNhoodSelect <- renderUI(nhoodSelect(
@@ -98,7 +102,8 @@ server <- function(input, output) {
     inputId = "nhoodSelWinNhood",
     nhoods = nhoodList(dat(), as.integer(input$depthSelWinNhood))))
   output$rewardNhoodSelect <- renderUI(nhoodSelect(
-    inputId = "nhoodSelTotalReward", as.integer(input$depthTR)))
+    inputId = "nhoodSelTotalReward",
+    nhoods = nhoodList(dat(), as.integer(input$depthSelTotalReward))))
   output$nodesPerNhoodSelect <- renderUI(nhoodSelect(
     inputId = "nhoodSelNodesPerNhood", as.integer(input$depthNodes)))
   output$winNodeNhoodSelect <- renderUI(nhoodSelect(

@@ -14,17 +14,13 @@ outInaccurate <- function(dat, roundRange = NA) {
 }
 
 
-outRevealersPerNhoodFig <- function(dat, roundRange = NA, depth = 8, .f = mean,
+outRevealersPerNhoodFig <- function(dat, roundRange = NA, depthVal = 8, .f = mean,
                                     revealerSortType = "Numerical order",
                                     highlightNhood = NA) {
-  fname <- case_when(
-    identical(.f, mean) ~ "mean ",
-    identical(.f, sum) ~ "total ",
-    TRUE ~ ""
-  )
-  ylab <- str_c(fname, "number of revealers")
-  restrictRoundsDepth(dat, roundRange, depth) %>%
-    revealerNhoodSummary(.f, depth) %>%
+  fname <- case_when(identical(.f,mean) ~ "mean", identical(.f,sum) ~ "total", TRUE ~ "")
+  ylab <- str_c(fname, " number of revealers")
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
+    revealerNhoodSummary(.f, depthVal) %>%
     filter(!is.na(nhood)) %>%
     revealersPerNhoodFig(revealerSortType, ylab, highlightNhood)
 }
@@ -56,11 +52,11 @@ outRevealCommitTab <- function(dat, roundRange = NA, inaccFilt = "") {
     } else .
     } %>%
     transmute(`round` = roundNumber,
-              `reveals` = revealed,
               `commits` = committed,
+              `reveals` = revealed,
               `inaccurate reveals` = inaccurate,
-              `reveals without commit` = revealNoCommit,
-              `commits without reveal` = commitNoReveal)
+              `commits without reveal` = commitNoReveal,
+              `reveals without commit` = revealNoCommit)
 }
 
 
@@ -118,31 +114,34 @@ outRewardFig <- function(dat, roundRange = NA, xrange = range(dat$rewardAmount),
 }
 
 
-outWinNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
-    winsByNhood(depth) %>%
+outWinNhoodFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
+    winsByNhood(depthVal) %>%
     participationNhoodQuantileFig(highlightNhood)
 }
 
 
-outWinNodeNhoodFig <- function(dat, roundRange = NA, depth = 8, sortBy = "wins",
+outWinNodeNhoodFig <- function(dat, roundRange = NA, depthVal = 8, sortBy = "wins",
                                highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
-    winsNodesByNhood(roundRange, depth) %>%
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
+    winsNodesByNhood(roundRange, depthVal) %>%
     winNodeNhoodFig(sortBy, highlightNhood)
 }
 
 
-outWinDistrFig <- function(dat, roundRange = NA, depth = 8) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outWinDistrFig <- function(dat, roundRange = NA, depthVal = 8) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     winEventsTab() %>%
+    filter(depth == depthVal) %>%
+    select(-depth) %>%
     participationNhoodHistFig()
 }
 
 
-outRewardNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outRewardNhoodFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
     rewardNhoodFig(highlightNhood)
 }
 
@@ -155,7 +154,8 @@ outRewardNodeFig <- function(dat, roundRange = NA) {
 
 
 outDepth <- function(dat, roundRange = NA) {
-  depthDistr(restrictRounds(dat, roundRange))
+  depthDistr(restrictRounds(dat, roundRange)) %>%
+    filter(depth > 0)
 }
 
 
@@ -169,36 +169,37 @@ outDepthFig <- function(dat, roundRange = NA, log.y = "Logarithmic y-axis") {
 }
 
 
-outNodesPerNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outNodesPerNhoodFig <- function(dat, roundRange = NA, depthVal = 8,
+                                highlightNhood = NA) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     nodesByNhoodRank() %>%
     nodesPerNhoodQuantileFig(highlightNhood)
 }
 
 
-outNodeDistrFig <- function(dat, roundRange = NA, depth = 8) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outNodeDistrFig <- function(dat, roundRange = NA, depthVal = 8) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     nodesByNhood() %>%
     nodesPerNhoodHistFig()
 }
 
 
-outStakesNhoodFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outStakesNhoodFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     rewardNhoodDistr() %>%
     stakesNhoodQuantileFig(highlightNhood)
 }
 
 
-outStakesNodeFig <- function(dat, roundRange = NA, depth = 8) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outStakesNodeFig <- function(dat, roundRange = NA, depthVal = 8) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     rewardNhoodDistr() %>%
     stakesNhoodHistFig()
 }
 
 
-outStakedNodesFig <- function(dat, roundRange = NA, depth = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depth) %>%
+outStakedNodesFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
+  restrictRoundsDepth(dat, roundRange, depthVal) %>%
     stakedNodesPerNhood() %>%
     arrange(stakedNodes) %>%
     rowid_to_column("rank") %>%

@@ -88,7 +88,6 @@ skippedRoundsTabset <- function() {
       title = "Skipped rounds through time",
       verticalLayout(
         textOutput("outNumSkipped"),
-        textOutput("outChiSqUnifTxt"),
         plotOutput("outSkippedFig"),
         tableOutput("outSkippedTab")
       )
@@ -138,9 +137,7 @@ rewardTabset <- function(depths, rewardRange) {
     tabPanel(
       title = "Distribution of wins",
       verticalLayout(
-        fluidRow(
-          column(width = 2, depthSelect(inputId = "depthWD", depths))
-        ),
+        fluidRow(column(width = 2, uiOutput(outputId = "depthWD"))),
         plotOutput("outWinDistrFig")
       )
     ),
@@ -148,7 +145,7 @@ rewardTabset <- function(depths, rewardRange) {
       title = "Total reward (nhoods)",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "depthTR", depths)),
+          column(width = 2, uiOutput(outputId = "depthTR")),
           column(width = 6, widthSlider(inputId = "rewardNhoodFigWidth")),
           column(width = 2, uiOutput(outputId = "rewardNhoodSelect"))
         ),

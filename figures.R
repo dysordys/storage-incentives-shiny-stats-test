@@ -18,9 +18,10 @@ nhoodHighlight <- function(xintercept = NA, alpha = 0.5, linetype = "dashed", ..
 
 
 priceFig <- function(dat, maxPoints = 3001) {
-  yscale = max(dat$price) / max(dat$honest)
-  dat %>%
-    filter(roundNumber %in% roundsToPlot(range(dat$roundNumber), maxPoints)) %>%
+  pdat <- priceTab(dat)
+  yscale <- max(pdat$price) / max(pdat$honest)
+  pdat %>%
+    filter(roundNumber %in% roundsToPlot(range(pdat$roundNumber), maxPoints)) %>%
     ggplot(aes(x = roundNumber)) +
     geom_line(aes(y = price), colour = "steelblue", alpha = 0.4) +
     geom_line(aes(y = honest * yscale), colour = "goldenrod", alpha = 0.2) +
@@ -29,13 +30,63 @@ priceFig <- function(dat, maxPoints = 3001) {
     labs(x = "round", y = "relative price change (blue)") +
     scale_y_continuous(sec.axis = sec_axis(name = "honest revealers (yellow)",
                                            function(y) y / yscale,
-                                           breaks = seq(0, max(dat$honest), by = 2))) +
+                                           breaks = seq(0, max(pdat$honest), by = 2))) +
     themeApp()
+}
+
+
+inaccurateStats <- function(dat) {
+  s <- inaccurateRevealerStats(dat)
+  str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
+        ", or ", round(100 * s$p, 2), "%")
+}
+
+
+revealCommitTab <- function(dat, inaccFilt = "") {
+  dat %>%
+    select(roundNumber, event, overlay) %>%
+    filter(event != "won") %>%
+    nest(overlays = !roundNumber & !event) %>%
+    mutate(overlays = map(overlays, ~.$overlay)) %>%
+    pivot_wider(names_from = event, values_from = overlays) %>%
+    mutate(revealNoCommit = map2(revealed, committed, setdiff)) %>%
+    mutate(commitNoReveal = map2(committed, revealed, setdiff)) %>%
+    mutate(numRevealNoCommit = map_int(revealNoCommit, length)) %>%
+    mutate(numCommitNoReveal = map_int(commitNoReveal, length)) %>%
+    mutate(revealed = map_int(revealed, length)) %>%
+    mutate(committed = map_int(committed, length)) %>%
+    mutate(revealNoCommit = map_chr(revealNoCommit, str_c, collapse = "\n")) %>%
+    mutate(commitNoReveal = map_chr(commitNoReveal, str_c, collapse = "\n")) %>%
+    left_join(revealersPerRound(dat), by = "roundNumber") %>%
+    mutate(inaccurate = revealed - honest) %>%
+    { if (inaccFilt == "Inaccurate revealers") {
+      filter(., inaccurate > 0)
+    } else if (inaccFilt == "Reveal-commit mismatch") {
+      filter(., numRevealNoCommit != 0 | numCommitNoReveal != 0)
+    } else if (inaccFilt=="Inaccurate revealers or reveal-commit mismatch") {
+      filter(., inaccurate > 0 | (numRevealNoCommit != 0 | numCommitNoReveal != 0))
+    } else .
+    } %>%
+    transmute(`round` = roundNumber,
+              `commits` = committed,
+              `reveals` = revealed,
+              `inaccurate reveals` = inaccurate,
+              `commits without reveal` = commitNoReveal,
+              `reveals without commit` = revealNoCommit)
+}
+
+
+numSkipped <- function(dat) {
+  roundsMissed <- nrow(missedRounds(dat))
+  totalRounds <- max(dat$roundNumber) - min(dat$roundNumber) + 1
+  str_c("Skipped rounds: ", roundsMissed, " out of ", totalRounds,
+        ", or ", round(100 * roundsMissed / totalRounds, 2), "%")
 }
 
 
 roundsFig <- function(dat) {
   dat %>%
+    missedRounds() %>%
     ggplot(aes(x = roundNumber)) +
     geom_rug(colour = "steelblue", alpha = 0.6) +
     geom_histogram(colour = "steelblue", fill = "steelblue", alpha = 0.2, bins = 30) +
@@ -44,8 +95,24 @@ roundsFig <- function(dat) {
 }
 
 
+skippedRoundsTab <- function(dat) {
+  missedRounds(dat) %>%
+    rename(`List of skipped rounds:` = roundNumber)
+}
+
+
+skippedRoundDistrTab <- function(dat) {
+  dat %>%
+    skippedRoundDistr() %>%
+    filter(skip > 0) %>%
+    rename(`Skipped in a row` = skip, `count` = n)
+}
+
+
 skippedRoundDistrFig <- function(dat) {
   dat %>%
+    skippedRoundDistr() %>%
+    filter(skip > 0) %>%
     ggplot(aes(x = skip, y = n)) +
     geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
     labs(x = "Number of consecutive rounds skipped", y = "Number of occurrences") +
@@ -64,6 +131,8 @@ rewardDistrFig <- function(dat, xrange = c(NA, NA), xtrans = "Logarithmic",
     }
   }
   dat %>%
+    skippedRounds() %>%
+    mutate(skip = as_factor(skip)) %>%
     mutate(rewardAmount = rewardAmount + 1 * (ytrans == "Pseudo-logarithmic")) %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
@@ -75,8 +144,12 @@ rewardDistrFig <- function(dat, xrange = c(NA, NA), xtrans = "Logarithmic",
 }
 
 
-participationNhoodHistFig <- function(dat) {
+winNhoodHistFig <- function(dat, depthVal = 8) {
   dat %>%
+    rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
+    select(nhood, winEvents) %>%
+    count(winEvents) %>%
     ggplot(aes(x = winEvents, y = n)) +
     geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2,
              position = "identity", na.rm = TRUE) +
@@ -86,11 +159,14 @@ participationNhoodHistFig <- function(dat) {
 }
 
 
-participationNhoodQuantileFig <- function(dat, highlightNhood = NA) {
-  dat %>%
-    sortNhoodBy(winEvents) %>%
+winNhoodQuantileFig <- function(dat, depthVal = 8, highlightNhood = NA) {
+  pdat <- dat %>%
+    rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
+    sortNhoodBy(winEvents)
+  pdat %>%
     ggplot(aes(x = nhood, y = winEvents, group = 0)) +
-    { if (nrow(dat) > 1) geom_step(colour = "steelblue") else
+    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
       geom_point(colour = "steelblue", size = 2) } +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of win events") +
@@ -98,18 +174,32 @@ participationNhoodQuantileFig <- function(dat, highlightNhood = NA) {
 }
 
 
-rewardNhoodFig <- function(dat, highlightNhood = NA) {
-  dat %>%
-    rename(observed = totalReward) %>%
-    arrange(observed) %>%
-    rowid_to_column("rank") %>%
-    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
-    ggplot(aes(x = nhood, y = observed, group = 0)) +
-    { if (nrow(dat) > 1) geom_step(colour = "steelblue") else
+rewardNhoodFig <- function(dat, depthVal = 8, highlightNhood = NA) {
+  pdat <- dat %>%
+    rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
+    sortNhoodBy(totalReward)
+  pdat %>%
+    ggplot(aes(x = nhood, y = totalReward, group = 0)) +
+    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
       geom_point(colour = "steelblue", size = 2) } +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "sum of rewards (BZZ)") +
     themeApp(nhood.x = TRUE)
+}
+
+
+rewardPerNodeFig <- function(dat) {
+  dat %>%
+    rewardPerNode() %>%
+    arrange(reward) %>%
+    rowid_to_column("rank") %>%
+    ggplot(aes(x = rank, y = reward)) +
+    geom_step(colour = "steelblue") +
+    scale_x_continuous(name = "nodes (in increasing order of total reward)") +
+    scale_y_log10(name = "sum of rewards (BZZ)") +
+    themeApp() +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
 }
 
 
@@ -136,6 +226,25 @@ nodesPerNhoodQuantileFig <- function(dat, highlightNhood = NA) {
 }
 
 
+depthTab <- function(dat) {
+  depthDistr(dat) %>%
+    filter(depth > 0) %>%
+    rename(`number of nodes` = n)
+}
+
+
+depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
+  dat %>%
+    depthDistr() %>%
+    filter(depth > 0) %>%
+    ggplot(aes(x = as_factor(depth), y = n)) +
+    geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
+    labs(x = "depth", y = "number of nodes") +
+    { if (log.y == "Logarithmic y-axis") scale_y_log10() else scale_y_continuous() } +
+    themeApp()
+}
+
+
 winNodeNhoodFig <- function(dat, sortBy = "wins", highlightNhood = NA) {
   dat %>%
     arrange({ if (sortBy == "wins") winEvents else nodes }) %>%
@@ -153,13 +262,16 @@ winNodeNhoodFig <- function(dat, sortBy = "wins", highlightNhood = NA) {
 }
 
 
-revealersPerNhoodFig <- function(dat, sortBy = "Honest revealers", ylab = NA,
-                                 highlightNhood = NA) {
+revealersPerNhoodFig <- function(dat, depthVal = 8, .f = mean,
+                                 sortBy = "Honest revealers", highlightNhood = NA) {
+  fname <- case_when(identical(.f,mean) ~ "mean", identical(.f,sum) ~ "total", TRUE ~ "")
+  ylab <- str_c(fname, " number of revealers")
   dat %>%
-    arrange(if (sortBy == "Honest revealers") honest else
+    restrictDepth(depthVal) %>%
+    revealerNhoodSummary(.f, depthVal) %>%
+    filter(!is.na(nhood)) %>%
+    sortNhoodBy(if (sortBy == "Honest revealers") honest else
       if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
-    rowid_to_column("rank") %>%
-    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
     ggplot(aes(x = nhood, y = value, colour = `revealer type`, fill = `revealer type`)) +
     geom_col(alpha = 0.5) +
@@ -191,29 +303,6 @@ stakesNhoodQuantileFig <- function(dat, highlightNhood = NA) {
     labs(x = "neighbourhood", y = "sum of stakes (BZZ)") +
     scale_y_log10() +
     themeApp(nhood.x = TRUE)
-}
-
-
-rewardPerNodeFig <- function(dat) {
-  dat %>%
-    arrange(reward) %>%
-    rowid_to_column("rank") %>%
-    ggplot(aes(x = rank, y = reward)) +
-    geom_step(colour = "steelblue") +
-    scale_x_continuous(name = "nodes (in increasing order of total reward)") +
-    scale_y_log10(name = "sum of rewards (BZZ)") +
-    themeApp() +
-    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
-}
-
-
-depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
-  dat %>%
-    ggplot(aes(x = as_factor(depth), y = n)) +
-    geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
-    labs(x = "depth", y = "number of nodes") +
-    { if (log.y == "Logarithmic y-axis") scale_y_log10() else scale_y_continuous() } +
-    themeApp()
 }
 
 

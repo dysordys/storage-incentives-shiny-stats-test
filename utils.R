@@ -28,11 +28,18 @@ restrictRounds <- function(dat, roundRange) {
 }
 
 
-restrictRoundsDepth <- function(dat, roundRange, depths) {
-  restrictRounds(dat, roundRange) %>%
+restrictDepth <- function(dat, depths) {
+  dat %>%
     group_by(roundNumber) %>%
     filter(length(intersect(depths, depth)) > 0) %>%
     ungroup()
+}
+
+
+restrictRoundsDepth <- function(dat, roundRange, depths) {
+  dat %>%
+    restrictRounds(roundRange) %>%
+    restrictDepth(depths)
 }
 
 
@@ -74,6 +81,14 @@ pricePerRound <- function(dat, initPrice = 2048) {
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(honest = replace_na(honest, 0)) %>%
     mutate(price = accumPrice(honest, initPrice))
+}
+
+
+priceTab <- function(dat) {
+  dat %>%
+    pricePerRound() %>%
+    mutate(inaccurate = revealers - honest) %>%
+    mutate(price = price / first(price))
 }
 
 

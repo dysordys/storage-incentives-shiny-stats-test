@@ -10,8 +10,9 @@ source("uifunc.R")
 dataOrig <- read_rds("data.rds")
 
 
+
 ui <- fluidPage(
-  titlePanel("Redistribution game dashboard"),
+  titlePanel("Redistribution data dashboard"),
   navbarPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
@@ -27,16 +28,16 @@ ui <- fluidPage(
 )
 
 
+
 server <- function(input, output) {
 
   dat <- reactive(restrictRounds(dataOrig, input$roundRange))
 
 
-  # Elements of tabset "Reveal":
+  # Elements of tab "Reveal":
   output$outRevealersPerNhoodFig <- renderPlot(
-    outRevealersPerNhoodFig(dat(), input$roundRange, input$depthSelRevealersPerNhood,
-                            .f = mean, input$revealerSortType,
-                            input$nhoodSelRevealersPerNhood),
+    revealersPerNhoodFig(dat(), input$depthSelRevealersPerNhood, .f = mean,
+                         input$revealerSortType, input$nhoodSelRevealersPerNhood),
     width = reactive(input$revealerNhoodFigWidth), height = 500
   )
   output$revealerNhoodDepth <- renderUI(
@@ -48,9 +49,8 @@ server <- function(input, output) {
   )
 
   output$outRevealersPerNhoodFig2 <- renderPlot(
-    outRevealersPerNhoodFig(dat(), input$roundRange, input$depthSelRevealersPerNhood2,
-                            .f = sum, input$revealerSortType2,
-                            input$nhoodSelRevealersPerNhood2),
+    revealersPerNhoodFig(dat(), input$depthSelRevealersPerNhood2, .f = sum,
+                         input$revealerSortType2, input$nhoodSelRevealersPerNhood2),
     width = reactive(input$revealerNhoodFigWidth2), height = 500
   )
   output$revealerNhoodDepth2 <- renderUI(
@@ -61,45 +61,49 @@ server <- function(input, output) {
                 nhoods = nhoodList(dat(), as.integer(input$depthSelRevealersPerNhood2)))
   )
 
-  output$outInacc <- renderText(outInaccurate(dat(), input$roundRange))
+  output$outInacc <- renderText(
+    inaccurateStats(dat())
+  )
 
-  output$outPriceFig <- renderPlot(outPriceFig(dat(), input$roundRange))
+  output$outPriceFig <- renderPlot(
+    priceFig(dat())
+  )
 
   output$outRevealCommitTab <- renderTable(
-    outRevealCommitTab(dat(), input$roundRange, input$inaccFilt), na = ""
+    revealCommitTab(dat(), input$inaccFilt),
+    na = ""
   )
 
 
-  # Elements of tabset "Skipped rounds":
+  # Elements of tab "Skipped rounds":
   output$outNumSkipped <- renderText(
-    outNumSkipped(dat(), input$roundRange)
+    numSkipped(dat())
   )
 
   output$outSkippedFig <- renderPlot(
-    outSkippedFig(dat(), input$roundRange)
+    roundsFig(dat())
   )
 
   output$outSkippedTab <- renderTable(
-    outSkippedTab(dat(), input$roundRange)
+    skippedRoundsTab(dat())
   )
 
   output$outSkipDistrTab <- renderTable(
-    outSkippedRoundDistrTab(dat(), input$roundRange)
+    skippedRoundDistrTab(dat())
   )
 
   output$outSkipDistrFig <- renderPlot(
-    outSkippedRoundDistrFig(dat(), input$roundRange)
+    skippedRoundDistrFig(dat())
   )
 
 
-  # Elements of tabset "Rewards":
+  # Elements of tab "Rewards":
   output$outRewardFig <- renderPlot(
-    outRewardFig(dat(), input$roundRange, input$rewardRange, input$rewardFigLogX,
-                 input$rewardFigLogY)
+    rewardDistrFig(dat(), input$rewardRange, input$rewardFigLogX, input$rewardFigLogY)
   )
 
   output$outWinNhoodFig <- renderPlot(
-    outWinNhoodFig(dat(), input$roundRange, input$depthSelWinNhood, input$nhoodSelWinNhood),
+    winNhoodQuantileFig(dat(), input$depthSelWinNhood, input$nhoodSelWinNhood),
     width = reactive(input$winNhoodFigWidth), height = 500
   )
   output$depthWins <- renderUI(
@@ -112,15 +116,14 @@ server <- function(input, output) {
   )
 
   output$outWinDistrFig <- renderPlot(
-    outWinDistrFig(dat(), input$roundRange, input$depthSelWinDistr)
+    winNhoodHistFig(dat(), input$depthSelWinDistr)
   )
   output$depthWD <- renderUI(
     depthSelect(inputId = "depthSelWinDistr", depths = depthsWinDistr(dat()))
   )
 
   output$outRewardNhoodFig <- renderPlot(
-    outRewardNhoodFig(dat(), input$roundRange, input$depthSelTotalReward,
-                      input$nhoodSelTotalReward),
+    rewardNhoodFig(dat(), input$depthSelTotalReward, input$nhoodSelTotalReward),
     width = reactive(input$rewardNhoodFigWidth), height = 500
   )
   output$depthTR <- renderUI(
@@ -133,18 +136,18 @@ server <- function(input, output) {
   )
 
   output$outRewardNodeFig <- renderPlot(
-    outRewardNodeFig(dat(), input$roundRange),
+    rewardPerNodeFig(dat()),
     width = reactive(input$rewardNodeFigWidth), height = 450
   )
 
 
-  # Elements of tabset "Nodes":
+  # Elements of tab "Nodes":
   output$outDepthTab <- renderTable(
-    outDepthTab(dat(), input$roundRange)
+    depthTab(dat())
   )
 
   output$outDepthFig <- renderPlot(
-    outDepthFig(dat(), input$roundRange, input$depthLogY)
+    depthDistrFig(dat(), input$depthLogY)
   )
 
   output$outNodesPerNhoodFig <- renderPlot(
@@ -181,7 +184,7 @@ server <- function(input, output) {
   )
 
 
-  # Elements of tabset "Stakes":
+  # Elements of tab "Stakes":
   output$outStakesNhoodFig <- renderPlot(
     outStakesNhoodFig(dat(), input$roundRange, input$depthSelStake, input$nhoodSelStake),
     width = reactive(input$stakeFigWidth), height = 500
@@ -218,7 +221,9 @@ server <- function(input, output) {
 }
 
 
+
 shinyApp(ui = ui, server = server)
+
 
 # source("download_clean.R")
 # fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%

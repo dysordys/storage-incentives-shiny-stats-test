@@ -85,7 +85,7 @@ outSkippedFig <- function(dat, roundRange = NA) {
 
 
 outSkippedTab <- function(dat, roundRange = NA) {
-  rename(outSkipped(dat, roundRange), `Skipped rounds:` = roundNumber)
+  rename(outSkipped(dat, roundRange), `List of skipped rounds:` = roundNumber)
 }
 
 
@@ -115,25 +115,28 @@ outRewardFig <- function(dat, roundRange = NA, xrange = range(dat$rewardAmount),
 
 
 outWinNhoodFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
-    winsByNhood(depthVal) %>%
+  dat %>%
+    rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
     participationNhoodQuantileFig(highlightNhood)
 }
 
 
 outWinNodeNhoodFig <- function(dat, roundRange = NA, depthVal = 8, sortBy = "wins",
                                highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
-    winsNodesByNhood(roundRange, depthVal) %>%
+  restrictRounds(dat, roundRange) %>%
+    winsNodesByNhood() %>%
+    filter(depth == depthVal) %>%
     winNodeNhoodFig(sortBy, highlightNhood)
 }
 
 
 outWinDistrFig <- function(dat, roundRange = NA, depthVal = 8) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
-    winEventsTab() %>%
+  dat %>%
+    rewardNhoodDistr() %>%
     filter(depth == depthVal) %>%
-    select(-depth) %>%
+    select(nhood, winEvents) %>%
+    count(winEvents) %>%
     participationNhoodHistFig()
 }
 
@@ -171,22 +174,24 @@ outDepthFig <- function(dat, roundRange = NA, log.y = "Logarithmic y-axis") {
 
 outNodesPerNhoodFig <- function(dat, roundRange = NA, depthVal = 8,
                                 highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
-    nodesByNhoodRank() %>%
+  dat %>%
+    nodesPerNhood() %>%
+    filter(depth == depthVal) %>%
     nodesPerNhoodQuantileFig(highlightNhood)
 }
 
 
 outNodeDistrFig <- function(dat, roundRange = NA, depthVal = 8) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
-    nodesByNhood() %>%
+  dat %>%
+    nodeNhoodDistr(depthVal) %>%
     nodesPerNhoodHistFig()
 }
 
 
 outStakesNhoodFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
+  dat %>%
     rewardNhoodDistr() %>%
+    filter(depth == depthVal) %>%
     stakesNhoodQuantileFig(highlightNhood)
 }
 
@@ -199,9 +204,8 @@ outStakesNodeFig <- function(dat, roundRange = NA, depthVal = 8) {
 
 
 outStakedNodesFig <- function(dat, roundRange = NA, depthVal = 8, highlightNhood = NA) {
-  restrictRoundsDepth(dat, roundRange, depthVal) %>%
+  dat %>%
     stakedNodesPerNhood() %>%
-    arrange(stakedNodes) %>%
-    rowid_to_column("rank") %>%
+    filter(depth == depthVal) %>%
     stakedNodesFig(highlightNhood)
 }

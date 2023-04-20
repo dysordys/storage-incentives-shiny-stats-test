@@ -183,7 +183,7 @@ nodeTabset <- function(depths) {
       title = "Nodes per nhood",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "depthNodes", depths)),
+          column(width = 2, uiOutput(outputId = "depthNodesPerNhood")),
           column(width = 6, widthSlider(inputId = "nodeFigWidth")),
           column(width = 2, uiOutput(outputId = "nodesPerNhoodSelect"))
         ),
@@ -194,11 +194,11 @@ nodeTabset <- function(depths) {
       title = "Nodes & wins per nhood",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "depthWinsNodes", depths)),
+          column(width = 2, uiOutput(outputId = "depthWinsNodes")),
           column(width = 5, widthSlider(inputId = "winNodeFigWidth")),
           column(width = 3,  radioButtons(inputId = "sortWinNode",
                                           label = "Sort by number of:",
-                                          selected = "wins", inline = TRUE,
+                                          selected = "wins",
                                           choices = c("wins", "nodes"))),
           column(width = 2, uiOutput(outputId = "winNodeNhoodSelect"))
         ),
@@ -209,7 +209,7 @@ nodeTabset <- function(depths) {
       title = "Distribution of nodes",
       verticalLayout(
         fluidRow(
-          column(width = 2, depthSelect(inputId = "depthNodes2", depths))
+          column(width = 2, uiOutput(outputId = "depthNodesDistr"))
         ),
         plotOutput("outNodeDistrFig")
       )
@@ -223,7 +223,7 @@ stakeTabset <- function(depths) {
     tabPanel(
       title = "Sum of stakes across neighbourhoods",
       fluidRow(
-        column(width = 2, depthSelect(inputId = "depthStakes", depths)),
+        column(width = 2, uiOutput(outputId = "depthStakes")),
         column(width = 6, widthSlider(inputId = "stakeFigWidth")),
         column(width = 2, uiOutput(outputId = "stakeNhoodSelect"))
       ),
@@ -231,15 +231,13 @@ stakeTabset <- function(depths) {
     ),
     tabPanel(
       title = "Distribution of sum of stakes",
-      fluidRow(
-        column(width = 2, depthSelect(inputId = "depthStakes2", depths))
-      ),
+      fluidRow(column(width = 2, uiOutput(outputId = "depthStakeDistr"))),
       plotOutput("outStakesNodeFig")
     ),
     tabPanel(
       title = "Staked nodes",
       fluidRow(
-        column(width = 2, depthSelect(inputId = "depthStakes3", depths)),
+        column(width = 2, uiOutput(outputId = "depthStakedNodes")),
         column(width = 6, widthSlider(inputId = "stakedNodesFigWidth")),
         column(width = 2, uiOutput(outputId = "stakedNodesNhoodSelect"))
       ),

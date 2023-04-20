@@ -190,19 +190,18 @@ unifDistrNull <- function(x, rounds, nhoods) {
 nodesPerNhood <- function(dat) {
   dat %>%
     filter(!is.na(nhood)) %>%
-    group_by(nhood) %>%
+    group_by(depth, nhood) %>%
     count(overlay) %>%
-    ungroup()
+    ungroup() %>%
+    count(depth, nhood, name = "nodes")
 }
 
 
 stakedNodesPerNhood <- function(dat) {
   dat %>%
     filter(!is.na(nhood)) %>%
-    mutate(stake = 1L * (stake > 0)) %>%
-    group_by(nhood) %>%
-    summarise(stakedNodes = sum(stake)) %>%
-    ungroup()
+    filter(stake > 0) %>%
+    count(depth, nhood, name = "stakedNodes")
 }
 
 
@@ -229,7 +228,7 @@ depths <- function(dat) {
 
 depthsWinDistr <- function(dat) {
   dat %>%
-    winEventsTab() %>%
+    rewardNhoodDistr() %>%
     pull(depth) %>%
     unique() %>%
     sort()
@@ -266,8 +265,7 @@ nhoodList <- function(dat, depthVal, na.rm = TRUE) {
 nodes <- function(dat) {
   dat %>%
     nodesPerNhood() %>%
-    count(nhood) %>%
-    pull(n) %>%
+    pull(nodes) %>%
     sum()
 }
 
@@ -277,61 +275,25 @@ rounds <- function(dat) {
 }
 
 
-winEventsTab <- function(dat) {
+nodeNhoodDistr <- function(dat, depthVal) {
   dat %>%
-    rewardNhoodDistr() %>%
-    count(depth, winEvents, name = "observed") %>%
-    { if (nrow(.) > 0) right_join(., tibble(winEvents=min(.$winEvents):max(.$winEvents)),
-                                  by = "winEvents") else . } %>%
-    mutate(predicted = unifDistrNull(winEvents, rounds(dat), nhoods(dat)) *
-             sum(observed, na.rm = TRUE))
-}
-
-
-winsByNhood <- function(dat, depthVal) {
-  if (length(depthVal) == 0) depthVal <- 8
-  dat %>%
-    rewardNhoodDistr() %>%
+    nodesPerNhood() %>%
     filter(depth == depthVal) %>%
-    arrange(winEvents) %>%
+    count(nodes)
+}
+
+
+winsNodesByNhood <- function(dat) {
+  nodesPerNhood(dat) %>%
+    full_join(rewardNhoodDistr(dat), by = c("depth", "nhood"))
+}
+
+
+sortNhoodBy <- function(datByNhood, .sortby) {
+  datByNhood %>%
+    arrange({{.sortby}}) %>%
     rowid_to_column("rank") %>%
-    left_join(tibble(
-      rank = 1:nhoods(dat),
-      predict = unifQuantileNull(seq(0.1, 0.99, l=nhoods(dat)), rounds(dat), nhoods(dat))
-    ), by = "rank")
-}
-
-
-nodesByNhood <- function(dat) {
-  dat %>%
-    nodesPerNhood() %>%
-    count(nhood, name = "num") %>%
-    count(num) %>%
-    right_join(tibble(num = min(.$num):max(.$num)), by = "num") %>%
-    mutate(predict = unifDistrNull(num, nodes(dat), nhoods(dat))*sum(n, na.rm=TRUE))
-}
-
-
-nodesByNhoodRank <- function(dat) {
-  dat %>%
-    nodesPerNhood() %>%
-    count(nhood) %>%
-    arrange(n) %>%
-    rowid_to_column("rank") %>%
-    left_join(tibble(
-      rank = 1:nhoods(dat),
-      predict = unifQuantileNull(seq(0.1, 0.99, l=nhoods(dat)), nodes(dat), nhoods(dat))
-    ), by = "rank")
-}
-
-
-winsNodesByNhood <- function(dat, roundRange, depth) {
-  dat %>%
-    nodesByNhoodRank() %>%
-    rename(nodes = n, nodesPred = predict) %>%
-    left_join(winsByNhood(restrictRoundsDepth(dat, roundRange, depth)),
-              by = c("nhood"), suffix = c("Node", "Win")) %>%
-    rename(winsPred = predict)
+    mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank))
 }
 
 

@@ -2,8 +2,7 @@ library(shiny)
 library(tidyverse)
 
 source("utils.R")
-source("figures.R")
-source("serverfunc.R")
+source("output_items.R")
 source("uifunc.R")
 
 
@@ -151,8 +150,8 @@ server <- function(input, output) {
   )
 
   output$outNodesPerNhoodFig <- renderPlot(
-    outNodesPerNhoodFig(dat(), input$roundRange, input$depthSelNodesPerNhood,
-                        input$nhoodSelNodesPerNhood),
+    nodesPerNhoodQuantileFig(dat(), input$depthSelNodesPerNhood,
+                             input$nhoodSelNodesPerNhood),
     width = reactive(input$nodeFigWidth), height = 500
   )
   output$depthNodesPerNhood <- renderUI(
@@ -164,8 +163,7 @@ server <- function(input, output) {
   )
 
   output$outWinsNodesPerNhoodFig <- renderPlot(
-    outWinNodeNhoodFig(dat(), input$roundRange, input$depthSelWinNode,
-                       input$sortWinNode, input$nhoodSelWinNode),
+    winNodeNhoodFig(dat(), input$depthSelWinNode, input$sortWN, input$nhoodSelWinNode),
     width = reactive(input$winNodeFigWidth), height = 500
   )
   output$depthWinsNodes <- renderUI(
@@ -177,7 +175,7 @@ server <- function(input, output) {
   )
 
   output$outNodeDistrFig <- renderPlot(
-    outNodeDistrFig(dat(), input$roundRange, input$depthSelNodesDistr)
+    nodesPerNhoodHistFig(dat(), input$depthSelNodesDistr)
   )
   output$depthNodesDistr <- renderUI(
     depthSelect(inputId = "depthSelNodesDistr", depths = depths(dat()))
@@ -186,7 +184,7 @@ server <- function(input, output) {
 
   # Elements of tab "Stakes":
   output$outStakesNhoodFig <- renderPlot(
-    outStakesNhoodFig(dat(), input$roundRange, input$depthSelStake, input$nhoodSelStake),
+    stakesNhoodQuantileFig(dat(), input$depthSelStake, input$nhoodSelStake),
     width = reactive(input$stakeFigWidth), height = 500
   )
   output$depthStakes <- renderUI(
@@ -199,15 +197,14 @@ server <- function(input, output) {
   )
 
   output$outStakesNodeFig <- renderPlot(
-    outStakesNodeFig(dat(), input$roundRange, input$depthSelStakeDistr)
+    stakesNhoodHistFig(dat(), input$depthSelStakeDistr)
   )
   output$depthStakeDistr <- renderUI(
     depthSelect(inputId = "depthSelStakeDistr", depths = depths(dat()))
   )
 
   output$outStakedNodesFig <- renderPlot(
-    outStakedNodesFig(dat(), input$roundRange, input$depthSelStakedNodes,
-                      input$nhoodSelStakedNodes),
+    stakedNodesFig(dat(), input$depthSelStakedNodes, input$nhoodSelStakedNodes),
     width = reactive(input$stakedNodesFigWidth), height = 500
   )
   output$depthStakedNodes <- renderUI(

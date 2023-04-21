@@ -133,21 +133,21 @@ rewardDistrFig <- function(dat, xrange = c(NA, NA), xtrans = "Logarithmic",
   dat %>%
     skippedRounds() %>%
     mutate(skip = as_factor(skip)) %>%
-    mutate(rewardAmount = rewardAmount + 1 * (ytrans == "Pseudo-logarithmic")) %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
     xScale(dat, xtrans, xrange) +
-    { if (ytrans == "Pseudo-logarithmic") scale_y_log10() } +
+    { if (ytrans == "Pseudo-logarithmic")
+      scale_y_continuous(trans = scales::pseudo_log_trans(base = 10)) } +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
                       name = "skipped\nrounds") +
     themeApp()
 }
 
 
-winNhoodHistFig <- function(dat, depthVal = 8) {
+winNhoodHistFig <- function(dat, .depth) {
   dat %>%
     rewardNhoodDistr() %>%
-    filter(depth == depthVal) %>%
+    depthFilter(.depth) %>%
     select(nhood, winEvents) %>%
     count(winEvents) %>%
     ggplot(aes(x = winEvents, y = n)) +
@@ -159,10 +159,10 @@ winNhoodHistFig <- function(dat, depthVal = 8) {
 }
 
 
-winNhoodQuantileFig <- function(dat, depthVal = 8, highlightNhood = NA) {
+winNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
   pdat <- dat %>%
     rewardNhoodDistr() %>%
-    filter(depth == depthVal) %>%
+    depthFilter(.depth) %>%
     sortNhoodBy(winEvents)
   pdat %>%
     ggplot(aes(x = nhood, y = winEvents, group = 0)) +
@@ -174,10 +174,10 @@ winNhoodQuantileFig <- function(dat, depthVal = 8, highlightNhood = NA) {
 }
 
 
-rewardNhoodFig <- function(dat, depthVal = 8, highlightNhood = NA) {
+rewardNhoodFig <- function(dat, .depth, highlightNhood = NA) {
   pdat <- dat %>%
     rewardNhoodDistr() %>%
-    filter(depth == depthVal) %>%
+    depthFilter(.depth) %>%
     sortNhoodBy(totalReward)
   pdat %>%
     ggplot(aes(x = nhood, y = totalReward, group = 0)) +
@@ -203,22 +203,14 @@ rewardPerNodeFig <- function(dat) {
 }
 
 
-nodesPerNhoodHistFig <- function(dat) {
-  dat %>%
-    ggplot(aes(x = nodes, y = n)) +
-    geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2,
-             position = "identity", na.rm = TRUE) +
-    labs(x = "number of nodes", y = "number of nhoods with given # of nodes") +
-    scale_x_continuous(breaks = scales::pretty_breaks()) +
-    themeApp(margin = rep(0.2, 4))
-}
-
-
-nodesPerNhoodQuantileFig <- function(dat, highlightNhood = NA) {
-  dat %>%
-    sortNhoodBy(nodes) %>%
+nodesPerNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
+  pdat <- dat %>%
+    nodesPerNhood() %>%
+    depthFilter(.depth) %>%
+    sortNhoodBy(nodes)
+  pdat %>%
     ggplot(aes(x = nhood, y = nodes, group = 0)) +
-    { if (nrow(dat) > 1) geom_step(colour = "steelblue") else
+    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
       geom_point(colour = "steelblue", size = 2) } +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of nodes") +
@@ -245,8 +237,10 @@ depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
 }
 
 
-winNodeNhoodFig <- function(dat, sortBy = "wins", highlightNhood = NA) {
+winNodeNhoodFig <- function(dat, .depth, sortBy = "wins", highlightNhood = NA) {
   dat %>%
+    winsNodesByNhood() %>%
+    depthFilter(.depth) %>%
     arrange({ if (sortBy == "wins") winEvents else nodes }) %>%
     rowid_to_column("rank") %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank)) %>%
@@ -262,13 +256,25 @@ winNodeNhoodFig <- function(dat, sortBy = "wins", highlightNhood = NA) {
 }
 
 
-revealersPerNhoodFig <- function(dat, depthVal = 8, .f = mean,
-                                 sortBy = "Honest revealers", highlightNhood = NA) {
+nodesPerNhoodHistFig <- function(dat, .depth) {
+  dat %>%
+    nodeNhoodDistr(.depth) %>%
+    ggplot(aes(x = nodes, y = n)) +
+    geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2,
+             position = "identity", na.rm = TRUE) +
+    labs(x = "number of nodes", y = "number of nhoods with given # of nodes") +
+    scale_x_continuous(breaks = scales::pretty_breaks()) +
+    themeApp(margin = rep(0.2, 4))
+}
+
+
+revealersPerNhoodFig <- function(dat, .depth, .f = mean, sortBy = "Honest revealers",
+                                 highlightNhood = NA) {
   fname <- case_when(identical(.f,mean) ~ "mean", identical(.f,sum) ~ "total", TRUE ~ "")
   ylab <- str_c(fname, " number of revealers")
   dat %>%
-    restrictDepth(depthVal) %>%
-    revealerNhoodSummary(.f, depthVal) %>%
+    restrictDepth(.depth) %>%
+    revealerNhoodSummary(.f, .depth) %>%
     filter(!is.na(nhood)) %>%
     sortNhoodBy(if (sortBy == "Honest revealers") honest else
       if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
@@ -283,21 +289,14 @@ revealersPerNhoodFig <- function(dat, depthVal = 8, .f = mean,
 }
 
 
-stakesNhoodHistFig <- function(dat) {
-  dat %>%
-    rename(observed = totalStake) %>%
-    ggplot(aes(x = observed)) +
-    geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 80) +
-    scale_x_log10(name = "sum of stakes (BZZ)") +
-    themeApp()
-}
-
-
-stakesNhoodQuantileFig <- function(dat, highlightNhood = NA) {
-  dat %>%
-    sortNhoodBy(totalStake) %>%
+stakesNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
+  pdat <- dat %>%
+    rewardNhoodDistr() %>%
+    depthFilter(.depth) %>%
+    sortNhoodBy(totalStake)
+  pdat %>%
     ggplot(aes(x = nhood, y = totalStake, group = 0)) +
-    { if (nrow(dat) > 1) geom_step(colour = "steelblue") else
+    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
       geom_point(colour = "steelblue", size = 2) } +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "sum of stakes (BZZ)") +
@@ -306,11 +305,25 @@ stakesNhoodQuantileFig <- function(dat, highlightNhood = NA) {
 }
 
 
-stakedNodesFig <- function(dat, highlightNhood = NA) {
+stakesNhoodHistFig <- function(dat, .depth) {
   dat %>%
-    sortNhoodBy(stakedNodes) %>%
+    rewardNhoodDistr() %>%
+    depthFilter(.depth) %>%
+    ggplot(aes(x = totalStake)) +
+    geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 80) +
+    scale_x_log10(name = "sum of stakes (BZZ)") +
+    themeApp()
+}
+
+
+stakedNodesFig <- function(dat, .depth, highlightNhood = NA) {
+  pdat <- dat %>%
+    stakedNodesPerNhood() %>%
+    depthFilter(.depth) %>%
+    sortNhoodBy(stakedNodes)
+  pdat %>%
     ggplot(aes(x = nhood, y = stakedNodes, group = 0)) +
-    { if (nrow(dat) > 1) geom_step(colour = "steelblue") else
+    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
       geom_point(colour = "steelblue", size = 2) } +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of staked nodes") +

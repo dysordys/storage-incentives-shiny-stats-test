@@ -183,10 +183,10 @@ rewardRange <- function(dat) {
 
 rewardNhoodDistr <- function(dat) {
   dat %>%
-    filter(event == "won", !is.na(nhood)) %>%
+    filter(!is.na(nhood)) %>%
     group_by(depth, nhood) %>%
     summarise(winEvents = n(),
-              totalReward = sum(rewardAmount),
+              totalReward = sum(rewardAmount, na.rm = TRUE),
               totalStake = sum(stake)) %>%
     ungroup()
 }
@@ -234,6 +234,11 @@ depthDistr <- function(dat) {
 }
 
 
+depthFilter <- function(dat, .depth, defaultDepth = 8) {
+  filter(dat, depth == { if (length(.depth) == 1) .depth else defaultDepth })
+}
+
+
 depths <- function(dat) {
   depthDistr(dat) %>%
     filter(depth > 0) %>%
@@ -265,10 +270,9 @@ nhoods <- function(dat) {
 }
 
 
-nhoodList <- function(dat, depthVal, na.rm = TRUE) {
-  if (length(depthVal) == 0) depthVal <- 8
+nhoodList <- function(dat, .depth, na.rm = TRUE) {
   dat %>%
-    filter(depth == depthVal) %>%
+    depthFilter(.depth) %>%
     filter(if (na.rm) !is.na(nhood) else TRUE) %>%
     pull(nhood) %>%
     unique() %>%
@@ -290,10 +294,10 @@ rounds <- function(dat) {
 }
 
 
-nodeNhoodDistr <- function(dat, depthVal) {
+nodeNhoodDistr <- function(dat, .depth) {
   dat %>%
     nodesPerNhood() %>%
-    filter(depth == depthVal) %>%
+    depthFilter(.depth) %>%
     count(nodes)
 }
 
@@ -306,7 +310,7 @@ winsNodesByNhood <- function(dat) {
 
 sortNhoodBy <- function(datByNhood, .sortby) {
   datByNhood %>%
-    arrange({{.sortby}}) %>%
+    arrange(if (length(substitute(.sortby)) > 0) {{.sortby}} else NA) %>%
     rowid_to_column("rank") %>%
     mutate(nhood = fct_reorder(R.utils::intToBin(nhood), rank))
 }

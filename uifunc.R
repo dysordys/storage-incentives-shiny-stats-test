@@ -196,7 +196,7 @@ nodeTabset <- function(depths) {
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthWinsNodes")),
           column(width = 5, widthSlider(inputId = "winNodeFigWidth")),
-          column(width = 3,  radioButtons(inputId = "sortWinNode",
+          column(width = 3,  radioButtons(inputId = "sortWN",
                                           label = "Sort by number of:",
                                           selected = "wins",
                                           choices = c("wins", "nodes"))),

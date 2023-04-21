@@ -1,3 +1,6 @@
+`%ni%` <- function(x, y) !(x %in% y)
+
+
 fetchJson <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
   jsonlite::stream_in(url(url))
 }
@@ -21,7 +24,7 @@ fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rou
 downloadAllData <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
   fetchJsonAll(start = url) %>%
     cleanData() %>% # Sometimes 1st round is corrupted and last isn't done yet,
-    filter(!(roundNumber %in% range(roundNumber))) # so remove these
+    filter(roundNumber %ni% range(roundNumber)) # so remove these
 }
 
 
@@ -80,8 +83,11 @@ cleanStakeFrozen <- function(stakeFrozenColumn) {
 }
 
 
-mergeData <- function(data1, data2) {
-  bind_rows(data1, data2) %>%
+mergeData <- function(oldData, newData) {
+  duplicateRounds <- intersect(unique(oldData$roundNumber), unique(newData$roundNumber))
+  oldData %>%
+    filter(roundNumber %ni% duplicateRounds) %>%
+    bind_rows(newData) %>%
     distinct() %>%
     arrange(roundNumber)
 }

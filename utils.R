@@ -278,6 +278,17 @@ nhoodList <- function(dat, .depth, na.rm = TRUE) {
 }
 
 
+nhoodsWinDistr <- function(dat, .depth) {
+  dat %>%
+    rewardNhoodDistr() %>%
+    filter(depth == .depth) %>%
+    pull(nhood) %>%
+    unique() %>%
+    sort() %>%
+    R.utils::intToBin()
+}
+
+
 nodes <- function(dat) {
   dat %>%
     nodesPerNhood() %>%

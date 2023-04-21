@@ -44,7 +44,7 @@ server <- function(input, output) {
   )
   output$revealerNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelRevealersPerNhood",
-                nhoods = nhoodList(dat(), as.integer(input$depthSelRevealersPerNhood)))
+                nhoods = nhoodList(dat(), input$depthSelRevealersPerNhood))
   )
 
   output$outRevealersPerNhoodFig2 <- renderPlot(
@@ -57,7 +57,7 @@ server <- function(input, output) {
   )
   output$revealerNhoodSelect2 <- renderUI(
     nhoodSelect(inputId = "nhoodSelRevealersPerNhood2",
-                nhoods = nhoodList(dat(), as.integer(input$depthSelRevealersPerNhood2)))
+                nhoods = nhoodList(dat(), input$depthSelRevealersPerNhood2))
   )
 
   output$outInacc <- renderText(
@@ -111,7 +111,7 @@ server <- function(input, output) {
   output$winNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelWinNhood",
                 nhoods = nhoodList(filter(dat(), event == "won"),
-                                   as.integer(input$depthSelWinNhood)))
+                                   input$depthSelWinNhood))
   )
 
   output$outWinDistrFig <- renderPlot(
@@ -130,8 +130,7 @@ server <- function(input, output) {
   )
   output$rewardNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelTotalReward",
-                nhoods = nhoodList(filter(dat(), event == "won"),
-                                   as.integer(input$depthSelTotalReward)))
+                nhoods = nhoodsWinDistr(dat(), input$depthSelTotalReward))
   )
 
   output$outRewardNodeFig <- renderPlot(
@@ -159,7 +158,7 @@ server <- function(input, output) {
   )
   output$nodesPerNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelNodesPerNhood",
-                nhoods = nhoodList(dat(), as.integer(input$depthSelNodesPerNhood)))
+                nhoods = nhoodList(dat(), input$depthSelNodesPerNhood))
   )
 
   output$outWinsNodesPerNhoodFig <- renderPlot(
@@ -171,7 +170,7 @@ server <- function(input, output) {
   )
   output$winNodeNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelWinNode",
-                nhoods = nhoodList(dat(), as.integer(input$depthSelWinNode)))
+                nhoods = nhoodList(dat(), input$depthSelWinNode))
   )
 
   output$outNodeDistrFig <- renderPlot(
@@ -192,8 +191,7 @@ server <- function(input, output) {
   )
   output$stakeNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelStake",
-                nhoods = nhoodList(filter(dat(), event == "won"),
-                                   as.integer(input$depthSelStake)))
+                nhoods = nhoodList(filter(dat(), event == "won"), input$depthSelStake))
   )
 
   output$outStakesNodeFig <- renderPlot(
@@ -212,7 +210,7 @@ server <- function(input, output) {
   )
   output$stakedNodesNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelStakedNodes",
-                nhoods = nhoodList(dat(), as.integer(input$depthSelStakedNodes)))
+                nhoods = nhoodList(dat(), input$depthSelStakedNodes))
   )
 
 }

@@ -4,7 +4,5 @@
 - Distribution of anchors
 
 - Read/write communication with online data source
-
-- Mapping round range slider to calendar time
-
 - Janos's new data: what do the counts per nhood mean, compared to what we can already glean from the data?
+- Neighborhood selection issue for wins across nhoods, total reward, and sum of stakes

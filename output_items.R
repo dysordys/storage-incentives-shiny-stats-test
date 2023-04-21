@@ -17,6 +17,28 @@ nhoodHighlight <- function(xintercept = NA, alpha = 0.5, linetype = "dashed", ..
 }
 
 
+revealersPerNhoodFig <- function(dat, .depth, .f = mean, sortBy = "Honest revealers",
+                                 highlightNhood = NA) {
+  fname <- case_when(identical(.f,mean) ~ "mean", identical(.f,sum) ~ "total", TRUE ~ "")
+  ylab <- str_c(fname, " number of revealers")
+  dat %>%
+    restrictDepth(.depth) %>%
+    revealerNhoodSummary(.f, .depth) %>%
+    filter(!is.na(nhood)) %>%
+    sortNhoodBy(if (sortBy == "Honest revealers") honest else
+      if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
+    pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
+    ggplot(aes(x = nhood, y = value, colour = `revealer type`, fill = `revealer type`)) +
+    geom_point(alpha = 0.5, size = 2) +
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = ylab) +
+    scale_colour_manual(values = c("steelblue", "goldenrod")) +
+    scale_fill_manual(values = c("steelblue", "goldenrod"),
+                      guide = guide_legend(override.aes = list(alpha = 1))) +
+    themeApp(nhood.x = TRUE)
+}
+
+
 priceFig <- function(dat, maxPoints = 3001) {
   pdat <- priceTab(dat)
   yscale <- max(pdat$price) / max(pdat$honest)
@@ -157,7 +179,7 @@ winNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
     depthFilter(.depth) %>%
     sortNhoodBy(winEvents) %>%
     ggplot(aes(x = nhood, y = winEvents)) +
-    geom_point(colour = "steelblue", alpha = 0.5) +
+    geom_point(colour = "steelblue", alpha = 0.5, size = 2) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of win events") +
     themeApp(nhood.x = TRUE)
@@ -170,7 +192,7 @@ rewardNhoodFig <- function(dat, .depth, highlightNhood = NA) {
     depthFilter(.depth) %>%
     sortNhoodBy(totalReward) %>%
     ggplot(aes(x = nhood, y = totalReward)) +
-    geom_point(colour = "steelblue", alpha = 0.5) +
+    geom_point(colour = "steelblue", alpha = 0.5, size = 2) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "sum of rewards (BZZ)") +
     themeApp(nhood.x = TRUE)
@@ -183,7 +205,7 @@ rewardPerNodeFig <- function(dat) {
     arrange(reward) %>%
     rowid_to_column("rank") %>%
     ggplot(aes(x = rank, y = reward)) +
-    geom_point(colour = "steelblue", alpha = 0.5) +
+    geom_point(colour = "steelblue", alpha = 0.5, size = 2) +
     scale_x_continuous(name = "nodes (in increasing order of total reward)") +
     scale_y_log10(name = "sum of rewards (BZZ)") +
     themeApp() +
@@ -197,7 +219,7 @@ nodesPerNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
     depthFilter(.depth) %>%
     sortNhoodBy(nodes) %>%
     ggplot(aes(x = nhood, y = nodes)) +
-    geom_point(colour = "steelblue", alpha = 0.5) +
+    geom_point(colour = "steelblue", alpha = 0.5, size = 2) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of nodes") +
     themeApp(nhood.x = TRUE)
@@ -233,7 +255,7 @@ winNodeNhoodFig <- function(dat, .depth, sortBy = "wins", highlightNhood = NA) {
     rename(`win events` = winEvents) %>%
     pivot_longer(cols = c(nodes, `win events`)) %>%
     ggplot(aes(x = nhood, y = value, colour = name, group = name)) +
-    geom_point(alpha = 0.5) +
+    geom_point(alpha = 0.5, size = 2) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of nodes / wins") +
     scale_colour_manual(name = NULL, values = c("steelblue", "goldenrod"),
@@ -254,34 +276,13 @@ nodesPerNhoodHistFig <- function(dat, .depth) {
 }
 
 
-revealersPerNhoodFig <- function(dat, .depth, .f = mean, sortBy = "Honest revealers",
-                                 highlightNhood = NA) {
-  fname <- case_when(identical(.f,mean) ~ "mean", identical(.f,sum) ~ "total", TRUE ~ "")
-  ylab <- str_c(fname, " number of revealers")
-  dat %>%
-    restrictDepth(.depth) %>%
-    revealerNhoodSummary(.f, .depth) %>%
-    filter(!is.na(nhood)) %>%
-    sortNhoodBy(if (sortBy == "Honest revealers") honest else
-      if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
-    pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
-    ggplot(aes(x = nhood, y = value, colour = `revealer type`, fill = `revealer type`)) +
-    geom_point(alpha = 0.5) +
-    nhoodHighlight(xintercept = highlightNhood) +
-    labs(x = "neighbourhood", y = ylab) +
-    scale_colour_manual(values = c("steelblue", "goldenrod")) +
-    scale_fill_manual(values = c("steelblue", "goldenrod")) +
-    themeApp(nhood.x = TRUE)
-}
-
-
 stakesNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
   dat %>%
     rewardNhoodDistr() %>%
     depthFilter(.depth) %>%
     sortNhoodBy(totalStake) %>%
     ggplot(aes(x = nhood, y = totalStake)) +
-    geom_point(colour = "steelblue", alpha = 0.5) +
+    geom_point(colour = "steelblue", alpha = 0.5, size = 2) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "sum of stakes (BZZ)") +
     scale_y_log10() +
@@ -306,7 +307,7 @@ stakedNodesFig <- function(dat, .depth, highlightNhood = NA) {
     depthFilter(.depth) %>%
     sortNhoodBy(stakedNodes) %>%
     ggplot(aes(x = nhood, y = stakedNodes)) +
-    geom_point(colour = "steelblue", alpha = 0.5) +
+    geom_point(colour = "steelblue", alpha = 0.5, size = 2) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of staked nodes") +
     themeApp(nhood.x = TRUE)

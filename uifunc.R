@@ -33,12 +33,12 @@ revealerTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "revealerNhoodDepth")),
+          column(width = 2, uiOutput(outputId = "revealerNhoodSelect")),
           column(width = 3, radioButtons(inputId = "revealerSortType",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
                                                      "Inaccurate revealers",
-                                                     "Numerical order"))),
-          column(width = 2, uiOutput(outputId = "revealerNhoodSelect"))
+                                                     "Numerical order")))
         ),
         plotOutput("outRevealersPerNhoodFig")
       )
@@ -48,12 +48,12 @@ revealerTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "revealerNhoodDepth2")),
+          column(width = 2, uiOutput(outputId = "revealerNhoodSelect2")),
           column(width = 3, radioButtons(inputId = "revealerSortType2",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
                                                      "Inaccurate revealers",
-                                                     "Numerical order"))),
-          column(width = 2, uiOutput(outputId = "revealerNhoodSelect2"))
+                                                     "Numerical order")))
         ),
         plotOutput("outRevealersPerNhoodFig2")
       )
@@ -106,13 +106,15 @@ rewardTabset <- function(depths, rewardRange) {
     tabPanel(
       title = "Reward distribution",
       verticalLayout(
-        splitLayout(
-          radioButtons(inputId = "rewardFigLogX", label = "x-axis:",
-                       selected = "Linear",
-                       choices = c("Linear", "Logarithmic")),
-          radioButtons(inputId = "rewardFigLogY", label = "y-axis:",
-                       selected = "Square-root transformed",
-                       choices = c("Linear", "Square-root transformed"))
+        fluidRow(
+          column(width = 2,
+                 radioButtons(inputId = "rewardFigLogX", label = "x-axis:",
+                              selected = "Linear",
+                              choices = c("Linear", "Logarithmic"))),
+          column(width = 3,
+                 radioButtons(inputId = "rewardFigLogY", label = "y-axis:",
+                              selected = "Square-root transformed",
+                              choices = c("Linear", "Square-root transformed")))
         ),
         plotOutput("outRewardFig")
       )
@@ -161,9 +163,9 @@ nodeTabset <- function(depths) {
       fluidRow(
         column(width = 4, tableOutput("outDepthTab")),
         column(width = 8, verticalLayout(
-          radioButtons(inputId = "depthLogY", label = NULL,
-                       selected = "Logarithmic y-axis", inline = TRUE,
-                       choices = c("Linear y-axis", "Logarithmic y-axis")),
+          radioButtons(inputId = "depthLogY", label = "y-axis: ",
+                       selected = "Logarithmic", inline = TRUE,
+                       choices = c("Linear", "Logarithmic")),
           plotOutput("outDepthFig")
         ))
       )
@@ -183,11 +185,11 @@ nodeTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthWinsNodes")),
+          column(width = 2, uiOutput(outputId = "winNodeNhoodSelect")),
           column(width = 3,  radioButtons(inputId = "sortWN",
                                           label = "Sort by number of:",
                                           selected = "wins",
-                                          choices = c("wins", "nodes"))),
-          column(width = 2, uiOutput(outputId = "winNodeNhoodSelect"))
+                                          choices = c("wins", "nodes")))
         ),
         plotOutput("outWinsNodesPerNhoodFig")
       )

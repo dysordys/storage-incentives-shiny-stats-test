@@ -60,8 +60,7 @@ revealersPerRound <- function(dat) {
     group_by(roundNumber) %>%
     mutate(honest = (id == id[event == "won"])) %>%
     filter(event == "revealed") %>%
-    summarise(revealers = n(), honest = sum(honest)) %>%
-    ungroup()
+    summarise(revealers = n(), honest = sum(honest), .groups = "drop")
 }
 
 
@@ -71,8 +70,7 @@ revealerNhoodSummary <- function(dat, .f = mean, depths = 1:9) {
     mutate(inaccurate = revealers - honest) %>%
     filter(depth %in% depths) %>%
     group_by(nhood) %>%
-    summarise(honest = .f(honest), inaccurate = .f(inaccurate)) %>%
-    ungroup()
+    summarise(honest = .f(honest), inaccurate = .f(inaccurate), .groups = "drop")
 }
 
 
@@ -187,8 +185,8 @@ rewardNhoodDistr <- function(dat) {
     group_by(depth, nhood) %>%
     summarise(winEvents = n(),
               totalReward = sum(rewardAmount, na.rm = TRUE),
-              totalStake = sum(stake)) %>%
-    ungroup()
+              totalStake = sum(stake),
+              .groups = "drop")
 }
 
 
@@ -224,8 +222,7 @@ rewardPerNode <- function(dat) {
   dat %>%
     filter(event == "won") %>%
     group_by(rewardTo) %>%
-    summarise(reward = sum(rewardAmount)) %>%
-    ungroup()
+    summarise(reward = sum(rewardAmount), .groups = "drop")
 }
 
 
@@ -319,8 +316,7 @@ sortNhoodBy <- function(datByNhood, .sortby) {
 roundsWithoutWinner <- function(dat) {
   dat %>%
     group_by(roundNumber) %>%
-    summarise(winner = length(event[event == "won"])) %>%
-    ungroup() %>%
+    summarise(winner = length(event[event == "won"]), .groups = "drop") %>%
     filter(winner == 0) %>%
     pull(roundNumber)
 }
@@ -332,7 +328,7 @@ roundsWithDepthMismatch <- function(dat) {
     group_by(roundNumber) %>%
     mutate(wdepth = depth[event == "won"]) %>%
     mutate(eq = depth != wdepth) %>%
-    summarise(diff = sum(eq)) %>%
+    summarise(diff = sum(eq), .groups = "drop") %>%
     filter(diff != 0) %>%
     pull(roundNumber)
 }

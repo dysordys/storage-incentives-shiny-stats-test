@@ -152,14 +152,12 @@ winNhoodHistFig <- function(dat, .depth) {
 
 
 winNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
-  pdat <- dat %>%
+  dat %>%
     rewardNhoodDistr() %>%
     depthFilter(.depth) %>%
-    sortNhoodBy(winEvents)
-  pdat %>%
-    ggplot(aes(x = nhood, y = winEvents, group = 0)) +
-    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
-      geom_point(colour = "steelblue", size = 2) } +
+    sortNhoodBy(winEvents) %>%
+    ggplot(aes(x = nhood, y = winEvents)) +
+    geom_point(colour = "steelblue", alpha = 0.5) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of win events") +
     themeApp(nhood.x = TRUE)
@@ -167,14 +165,12 @@ winNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
 
 
 rewardNhoodFig <- function(dat, .depth, highlightNhood = NA) {
-  pdat <- dat %>%
+  dat %>%
     rewardNhoodDistr() %>%
     depthFilter(.depth) %>%
-    sortNhoodBy(totalReward)
-  pdat %>%
-    ggplot(aes(x = nhood, y = totalReward, group = 0)) +
-    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
-      geom_point(colour = "steelblue", size = 2) } +
+    sortNhoodBy(totalReward) %>%
+    ggplot(aes(x = nhood, y = totalReward)) +
+    geom_point(colour = "steelblue", alpha = 0.5) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "sum of rewards (BZZ)") +
     themeApp(nhood.x = TRUE)
@@ -187,7 +183,7 @@ rewardPerNodeFig <- function(dat) {
     arrange(reward) %>%
     rowid_to_column("rank") %>%
     ggplot(aes(x = rank, y = reward)) +
-    geom_step(colour = "steelblue") +
+    geom_point(colour = "steelblue", alpha = 0.5) +
     scale_x_continuous(name = "nodes (in increasing order of total reward)") +
     scale_y_log10(name = "sum of rewards (BZZ)") +
     themeApp() +
@@ -196,14 +192,12 @@ rewardPerNodeFig <- function(dat) {
 
 
 nodesPerNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
-  pdat <- dat %>%
+  dat %>%
     nodesPerNhood() %>%
     depthFilter(.depth) %>%
-    sortNhoodBy(nodes)
-  pdat %>%
-    ggplot(aes(x = nhood, y = nodes, group = 0)) +
-    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
-      geom_point(colour = "steelblue", size = 2) } +
+    sortNhoodBy(nodes) %>%
+    ggplot(aes(x = nhood, y = nodes)) +
+    geom_point(colour = "steelblue", alpha = 0.5) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of nodes") +
     themeApp(nhood.x = TRUE)
@@ -217,14 +211,14 @@ depthTab <- function(dat) {
 }
 
 
-depthDistrFig <- function(dat, log.y = "Logarithmic y-axis") {
+depthDistrFig <- function(dat, log.y = "Logarithmic") {
   dat %>%
     depthDistr() %>%
     filter(depth > 0) %>%
     ggplot(aes(x = as_factor(depth), y = n)) +
     geom_col(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
     labs(x = "depth", y = "number of nodes") +
-    { if (log.y == "Logarithmic y-axis") scale_y_log10() else scale_y_continuous() } +
+    { if (log.y == "Logarithmic") scale_y_log10() else scale_y_continuous() } +
     themeApp()
 }
 
@@ -272,7 +266,7 @@ revealersPerNhoodFig <- function(dat, .depth, .f = mean, sortBy = "Honest reveal
       if (sortBy == "Inaccurate revealers") inaccurate else NA) %>%
     pivot_longer(cols = c(honest, inaccurate), names_to = "revealer type") %>%
     ggplot(aes(x = nhood, y = value, colour = `revealer type`, fill = `revealer type`)) +
-    geom_col(alpha = 0.5) +
+    geom_point(alpha = 0.5) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = ylab) +
     scale_colour_manual(values = c("steelblue", "goldenrod")) +
@@ -282,14 +276,12 @@ revealersPerNhoodFig <- function(dat, .depth, .f = mean, sortBy = "Honest reveal
 
 
 stakesNhoodQuantileFig <- function(dat, .depth, highlightNhood = NA) {
-  pdat <- dat %>%
+  dat %>%
     rewardNhoodDistr() %>%
     depthFilter(.depth) %>%
-    sortNhoodBy(totalStake)
-  pdat %>%
-    ggplot(aes(x = nhood, y = totalStake, group = 0)) +
-    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
-      geom_point(colour = "steelblue", size = 2) } +
+    sortNhoodBy(totalStake) %>%
+    ggplot(aes(x = nhood, y = totalStake)) +
+    geom_point(colour = "steelblue", alpha = 0.5) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "sum of stakes (BZZ)") +
     scale_y_log10() +
@@ -309,14 +301,12 @@ stakesNhoodHistFig <- function(dat, .depth) {
 
 
 stakedNodesFig <- function(dat, .depth, highlightNhood = NA) {
-  pdat <- dat %>%
+  dat %>%
     stakedNodesPerNhood() %>%
     depthFilter(.depth) %>%
-    sortNhoodBy(stakedNodes)
-  pdat %>%
-    ggplot(aes(x = nhood, y = stakedNodes, group = 0)) +
-    { if (nrow(pdat) > 1) geom_step(colour = "steelblue") else
-      geom_point(colour = "steelblue", size = 2) } +
+    sortNhoodBy(stakedNodes) %>%
+    ggplot(aes(x = nhood, y = stakedNodes)) +
+    geom_point(colour = "steelblue", alpha = 0.5) +
     nhoodHighlight(xintercept = highlightNhood) +
     labs(x = "neighbourhood", y = "number of staked nodes") +
     themeApp(nhood.x = TRUE)

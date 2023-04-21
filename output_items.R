@@ -120,24 +120,16 @@ skippedRoundDistrFig <- function(dat) {
 }
 
 
-rewardDistrFig <- function(dat, xrange = c(NA, NA), xtrans = "Logarithmic",
-                           ytrans = "Pseudo-logarithmic") {
-  xScale <- function(dat, xtrans, xrange) {
-    if (xtrans == "Logarithmic") {
-      if (xrange[1] == 0) xrange[1] <- 0.9 * min(dat$rewardAmount)
-      scale_x_log10(name = "reward (BZZ)", limits = xrange)
-    } else {
-      scale_x_continuous(name = "reward (BZZ)", limits = xrange)
-    }
-  }
+rewardDistrFig <- function(dat, xtrans = "Logarithmic",
+                           ytrans = "Square-root transformed") {
   dat %>%
     skippedRounds() %>%
     mutate(skip = as_factor(skip)) %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
-    xScale(dat, xtrans, xrange) +
-    { if (ytrans == "Pseudo-logarithmic")
-      scale_y_continuous(trans = scales::pseudo_log_trans(base = 10)) } +
+    { if (xtrans == "Logarithmic") scale_x_log10() } +
+    { if (ytrans == "Square-root transformed") scale_y_sqrt() } +
+    labs(x = "reward (BZZ)") +
     scale_fill_manual(values = rcartocolor::carto_pal(name = "Safe"),
                       name = "skipped\nrounds") +
     themeApp()

@@ -37,7 +37,7 @@ server <- function(input, output) {
   output$outRevealersPerNhoodFig <- renderPlot(
     revealersPerNhoodFig(dat(), input$depthSelRevealersPerNhood, .f = mean,
                          input$revealerSortType, input$nhoodSelRevealersPerNhood),
-    width = reactive(input$revealerNhoodFigWidth), height = 500
+    height = 500
   )
   output$revealerNhoodDepth <- renderUI(
     depthSelect(inputId = "depthSelRevealersPerNhood", depths = depths(dat()))
@@ -50,7 +50,7 @@ server <- function(input, output) {
   output$outRevealersPerNhoodFig2 <- renderPlot(
     revealersPerNhoodFig(dat(), input$depthSelRevealersPerNhood2, .f = sum,
                          input$revealerSortType2, input$nhoodSelRevealersPerNhood2),
-    width = reactive(input$revealerNhoodFigWidth2), height = 500
+    height = 500
   )
   output$revealerNhoodDepth2 <- renderUI(
     depthSelect(inputId = "depthSelRevealersPerNhood2", depths = depths(dat()))
@@ -98,12 +98,12 @@ server <- function(input, output) {
 
   # Elements of tab "Rewards":
   output$outRewardFig <- renderPlot(
-    rewardDistrFig(dat(), input$rewardRange, input$rewardFigLogX, input$rewardFigLogY)
+    rewardDistrFig(dat(), input$rewardFigLogX, input$rewardFigLogY)
   )
 
   output$outWinNhoodFig <- renderPlot(
     winNhoodQuantileFig(dat(), input$depthSelWinNhood, input$nhoodSelWinNhood),
-    width = reactive(input$winNhoodFigWidth), height = 500
+    height = 500
   )
   output$depthWins <- renderUI(
     depthSelect(inputId = "depthSelWinNhood", depths = depthsWinDistr(dat()))
@@ -123,7 +123,7 @@ server <- function(input, output) {
 
   output$outRewardNhoodFig <- renderPlot(
     rewardNhoodFig(dat(), input$depthSelTotalReward, input$nhoodSelTotalReward),
-    width = reactive(input$rewardNhoodFigWidth), height = 500
+    height = 500
   )
   output$depthTR <- renderUI(
     depthSelect(inputId = "depthSelTotalReward", depths = depthsWinDistr(dat()))
@@ -136,7 +136,7 @@ server <- function(input, output) {
 
   output$outRewardNodeFig <- renderPlot(
     rewardPerNodeFig(dat()),
-    width = reactive(input$rewardNodeFigWidth), height = 450
+    height = 450
   )
 
 
@@ -152,7 +152,7 @@ server <- function(input, output) {
   output$outNodesPerNhoodFig <- renderPlot(
     nodesPerNhoodQuantileFig(dat(), input$depthSelNodesPerNhood,
                              input$nhoodSelNodesPerNhood),
-    width = reactive(input$nodeFigWidth), height = 500
+    height = 500
   )
   output$depthNodesPerNhood <- renderUI(
     depthSelect(inputId = "depthSelNodesPerNhood", depths = depths(dat()))
@@ -164,7 +164,7 @@ server <- function(input, output) {
 
   output$outWinsNodesPerNhoodFig <- renderPlot(
     winNodeNhoodFig(dat(), input$depthSelWinNode, input$sortWN, input$nhoodSelWinNode),
-    width = reactive(input$winNodeFigWidth), height = 500
+    height = 500
   )
   output$depthWinsNodes <- renderUI(
     depthSelect(inputId = "depthSelWinNode", depths = depths(dat()))
@@ -185,7 +185,7 @@ server <- function(input, output) {
   # Elements of tab "Stakes":
   output$outStakesNhoodFig <- renderPlot(
     stakesNhoodQuantileFig(dat(), input$depthSelStake, input$nhoodSelStake),
-    width = reactive(input$stakeFigWidth), height = 500
+    height = 500
   )
   output$depthStakes <- renderUI(
     depthSelect(inputId = "depthSelStake", depths = depthsWinDistr(dat()))
@@ -205,7 +205,7 @@ server <- function(input, output) {
 
   output$outStakedNodesFig <- renderPlot(
     stakedNodesFig(dat(), input$depthSelStakedNodes, input$nhoodSelStakedNodes),
-    width = reactive(input$stakedNodesFigWidth), height = 500
+    height = 500
   )
   output$depthStakedNodes <- renderUI(
     depthSelect(inputId = "depthSelStakedNodes", depths = depths(dat()))

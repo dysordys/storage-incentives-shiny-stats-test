@@ -33,7 +33,6 @@ revealerTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "revealerNhoodDepth")),
-          column(width = 5, widthSlider(inputId = "revealerNhoodFigWidth")),
           column(width = 3, radioButtons(inputId = "revealerSortType",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
@@ -49,7 +48,6 @@ revealerTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "revealerNhoodDepth2")),
-          column(width = 5, widthSlider(inputId = "revealerNhoodFigWidth2")),
           column(width = 3, radioButtons(inputId = "revealerSortType2",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
@@ -109,18 +107,14 @@ rewardTabset <- function(depths, rewardRange) {
       title = "Reward distribution",
       verticalLayout(
         splitLayout(
-          radioButtons(inputId = "rewardFigLogX", label = "x-axis:", inline = TRUE,
+          radioButtons(inputId = "rewardFigLogX", label = "x-axis:",
                        selected = "Linear",
                        choices = c("Linear", "Logarithmic")),
-          radioButtons(inputId = "rewardFigLogY", label = "y-axis:", inline = TRUE,
-                       selected = "Pseudo-logarithmic",
-                       choices = c("Linear", "Pseudo-logarithmic"))
+          radioButtons(inputId = "rewardFigLogY", label = "y-axis:",
+                       selected = "Square-root transformed",
+                       choices = c("Linear", "Square-root transformed"))
         ),
-        plotOutput("outRewardFig"),
-        sliderInput(inputId = "rewardRange", label = "Range of rewards",
-                    min = 0, max = ceiling(1.1 * rewardRange[2]),
-                    value = ceiling(c(0, 1.1) * rewardRange),
-                    round = -2, step = 0.01, width = "90%")
+        plotOutput("outRewardFig")
       )
     ),
     tabPanel(
@@ -128,7 +122,6 @@ rewardTabset <- function(depths, rewardRange) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthWins")),
-          column(width = 6, widthSlider(inputId = "winNhoodFigWidth")),
           column(width = 2, uiOutput(outputId = "winNhoodSelect"))
         ),
         plotOutput("outWinNhoodFig")
@@ -146,7 +139,6 @@ rewardTabset <- function(depths, rewardRange) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthTR")),
-          column(width = 6, widthSlider(inputId = "rewardNhoodFigWidth")),
           column(width = 2, uiOutput(outputId = "rewardNhoodSelect"))
         ),
         plotOutput("outRewardNhoodFig")
@@ -155,9 +147,6 @@ rewardTabset <- function(depths, rewardRange) {
     tabPanel(
       title = "Total reward (nodes)",
       verticalLayout(
-        fluidRow(
-          column(width = 6, widthSlider(inputId = "rewardNodeFigWidth"))
-        ),
         plotOutput("outRewardNodeFig")
       )
     )
@@ -184,7 +173,6 @@ nodeTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthNodesPerNhood")),
-          column(width = 6, widthSlider(inputId = "nodeFigWidth")),
           column(width = 2, uiOutput(outputId = "nodesPerNhoodSelect"))
         ),
         plotOutput("outNodesPerNhoodFig")
@@ -195,7 +183,6 @@ nodeTabset <- function(depths) {
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthWinsNodes")),
-          column(width = 5, widthSlider(inputId = "winNodeFigWidth")),
           column(width = 3,  radioButtons(inputId = "sortWN",
                                           label = "Sort by number of:",
                                           selected = "wins",
@@ -224,7 +211,6 @@ stakeTabset <- function(depths) {
       title = "Sum of stakes across neighbourhoods",
       fluidRow(
         column(width = 2, uiOutput(outputId = "depthStakes")),
-        column(width = 6, widthSlider(inputId = "stakeFigWidth")),
         column(width = 2, uiOutput(outputId = "stakeNhoodSelect"))
       ),
       plotOutput("outStakesNhoodFig")
@@ -238,7 +224,6 @@ stakeTabset <- function(depths) {
       title = "Staked nodes",
       fluidRow(
         column(width = 2, uiOutput(outputId = "depthStakedNodes")),
-        column(width = 6, widthSlider(inputId = "stakedNodesFigWidth")),
         column(width = 2, uiOutput(outputId = "stakedNodesNhoodSelect"))
       ),
       plotOutput("outStakedNodesFig")

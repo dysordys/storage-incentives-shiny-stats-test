@@ -222,7 +222,6 @@ shinyApp(ui = ui, server = server)
 # source("download_clean.R")
 # fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
 #   cleanData() %>%
-#   calculateNhoodsDec() %>%
 #   mergeData(read_rds("data.rds")) %>%
 #   write_rds("data.rds", compress = "xz")
 

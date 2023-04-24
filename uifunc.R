@@ -37,8 +37,7 @@ revealerTabset <- function(depths) {
           column(width = 3, radioButtons(inputId = "revealerSortType",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
-                                                     "Inaccurate revealers",
-                                                     "Numerical order")))
+                                                     "Inaccurate revealers")))
         ),
         plotOutput("outRevealersPerNhoodFig")
       )
@@ -52,8 +51,7 @@ revealerTabset <- function(depths) {
           column(width = 3, radioButtons(inputId = "revealerSortType2",
                                          label = "Sort neighbourhoods by:",
                                          choices = c("Honest revealers",
-                                                     "Inaccurate revealers",
-                                                     "Numerical order")))
+                                                     "Inaccurate revealers")))
         ),
         plotOutput("outRevealersPerNhoodFig2")
       )
@@ -120,7 +118,7 @@ rewardTabset <- function(depths, rewardRange) {
       )
     ),
     tabPanel(
-      title = "Wins across nhoods",
+      title = "Wins across neighbourhoods",
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthWins")),
@@ -137,7 +135,7 @@ rewardTabset <- function(depths, rewardRange) {
       )
     ),
     tabPanel(
-      title = "Total reward (nhoods)",
+      title = "Total reward (neighbourhoods)",
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthTR")),
@@ -171,7 +169,7 @@ nodeTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Nodes per nhood",
+      title = "Nodes per neighbourhood",
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthNodesPerNhood")),
@@ -181,7 +179,7 @@ nodeTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Nodes & wins per nhood",
+      title = "Wins & nodes per neighbourhood",
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthWinsNodes")),

@@ -1,6 +1,3 @@
-`%ni%` <- function(x, y) !(x %in% y)
-
-
 fetchJson <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
   jsonlite::stream_in(url(url))
 }
@@ -23,25 +20,25 @@ fetchJsonAll <- function(start = "https://api.swarmscan.io/v1/redistribution/rou
 
 downloadAllData <- function(url = "https://api.swarmscan.io/v1/redistribution/rounds") {
   fetchJsonAll(start = url) %>%
-    cleanData() %>% # Sometimes 1st round is corrupted and last isn't done yet,
-    filter(roundNumber %ni% range(roundNumber)) # so remove these
+    cleanData()
 }
 
 
-cleanData <- function(jsonDat) {
-  tibble(json = jsonDat) %>%
-    unnest(json) %>%
-    select(rounds) %>% # This will drop the unneeded "next" column, if it exists
-    unnest(rounds) %>%
-    rowwise() %>% # Sometimes a round is corrupted, e.g. has no winner yet;
-    filter(ncol(events) >= 20) %>% # remove these - they have less than 20 columns
-    ungroup() %>%
-    mutate(events = map(events, reshapeEvents)) %>%
-    unnest(events) %>%
-    distinct() %>% # Remove occasional repeated records across files
-    mutate(rewardAmount = rewardAmount / 1e16,
-           stake = stake / 1e16) %>% # Convert PLUR to BZZ
-    arrange(roundNumber)
+nhoodBinStr <- function(overlay, depth = 8L) {
+  if (!is.na(depth) & depth > 0) {
+    numHexDigits <- ceiling(depth / 4) # 4: four bits = 1 hex digit
+    str_sub(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
+  } else NA
+}
+
+
+nhoodDec <- function(overlay, depth = 8L) {
+  strtoi(nhoodBinStr(overlay, depth), base = 2)
+}
+
+
+cleanStakeFrozen <- function(stakeFrozenElement) {
+  if (is.null(stakeFrozenElement)) tibble(value = NA) else as_tibble(stakeFrozenElement)
 }
 
 
@@ -57,36 +54,45 @@ reshapeEvents <- function(events) {
     { if ("stake" %in% names(.)) . else mutate(., stake = NA_real_) } %>%
     { if ("stakeDensity" %in% names(.)) . else mutate(., stakeDensity = NA_real_) } %>%
     { if ("reserveCommitment" %in% names(.)) . else
-      mutate(., reserveCommitment = NA_character_)
-    } %>%
+      mutate(., reserveCommitment = NA_character_) } %>%
+    { if ("stakeFrozen" %in% names(.)) . else
+      mutate(., stakeFrozen = NA) } %>%
     mutate(id = if_else(type == "event", reserveCommitment, hash)) %>%
     mutate(event = if_else(type == "event", name, "won")) %>%
     mutate(overlay = if_else(event == "won", winner.overlay, overlay)) %>%
     mutate(stake = if_else(event == "won", winner.stake, stake)) %>%
     mutate(depth = if_else(event == "won", winner.depth, depth)) %>%
     mutate(stakeDensity = if_else(event == "won", winner.stakeDensity, stakeDensity)) %>%
-    relocate(event, id, rewardAmount, depth, stake, overlay) %>%
-    #bind_cols(ifelse("stakeFrozen" %in% names(.),
-    #                 cleanStakeFrozen(.$stakeFrozen),
-    #                 tibble(slashed = rep(NA, nrow(.), account = NA, time = NA)))) %>%
-    select(-contains("winner"), -contains("stakeFrozen"), -contains("roundNumber"),
-           -starts_with("count"), -reserveCommitment, -hash, -name, -topics, -type)
+    mutate(stakeFrozen = map(stakeFrozen, cleanStakeFrozen)) %>%
+    relocate(event, id, rewardAmount, depth, stake, overlay, stakeFrozen) %>%
+    select(-contains("winner"), -contains("roundNumber"), -starts_with("count"),
+           -reserveCommitment, -hash, -name, -topics, -type)
 }
 
 
-cleanStakeFrozen <- function(stakeFrozenColumn) {
-  tibble(sf = stakeFrozenColumn) %>%
-    rowid_to_column("n") %>%
-    unnest(sf) %>%
-    right_join(tibble(n = 1:length(stakeFrozenColumn)), by = "n") %>%
-    select(-n)
+cleanData <- function(jsonDat) {
+  tibble(json = jsonDat) %>%
+    unnest(json) %>%
+    select(rounds) %>% # This will drop the unneeded "next" column, if it exists
+    unnest(rounds) %>%
+    rowwise() %>% # Sometimes a round is corrupted, e.g. has no winner yet;
+    filter(ncol(events) >= 20) %>% # remove these - they have less than 20 columns
+    ungroup() %>%
+    mutate(events = map(events, reshapeEvents)) %>%
+    unnest(events) %>%
+    distinct() %>% # Remove occasional repeated records across files
+    mutate(nhood = map2_int(overlay, depth, nhoodDec),
+           .after = overlay) %>% # Pre-calculate neighborhoods
+    mutate(rewardAmount = rewardAmount / 1e16,
+           stake = stake / 1e16) %>% # Convert PLUR to BZZ
+    arrange(roundNumber)
 }
 
 
 mergeData <- function(oldData, newData) {
   duplicateRounds <- intersect(unique(oldData$roundNumber), unique(newData$roundNumber))
   oldData %>%
-    filter(roundNumber %ni% duplicateRounds) %>%
+    filter(!(roundNumber %in% duplicateRounds)) %>%
     bind_rows(newData) %>%
     distinct() %>%
     arrange(roundNumber)

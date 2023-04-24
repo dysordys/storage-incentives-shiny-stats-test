@@ -137,24 +137,6 @@ skippedRoundDistr <- function(dat) {
 }
 
 
-nhoodBinStr <- function(overlay, depth = 8L) {
-  if (!is.na(depth) & depth > 0) {
-    numHexDigits <- ceiling(depth / 4) # 4: four bits = 1 hex digit
-    str_sub(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
-  } else NA
-}
-
-
-nhoodDec <- function(overlay, depth = 8L) {
-  strtoi(nhoodBinStr(overlay, depth), base = 2)
-}
-
-
-calculateNhoodsDec <- function(dat) {
-  mutate(dat, nhood = map2_int(overlay, depth, nhoodDec), .after = overlay)
-}
-
-
 nhoodsDec2Bin <- function(dat) {
   mutate(dat, nhood = R.utils::intToBin(nhood))
 }
@@ -342,6 +324,34 @@ roundsWithDepthMismatch <- function(dat) {
     summarise(diff = sum(eq), .groups = "drop") %>%
     filter(diff != 0) %>%
     pull(roundNumber)
+}
+
+
+shannon <- function(vec) {
+  p <- vec / sum(vec)
+  sum(-p[p > 0] * log(p[p > 0]))
+}
+
+
+invsimpson <- function(vec) {
+  p <- vec / sum(vec)
+  1 / sum(p^2)
+}
+
+
+frozenNodes <- function(dat) {
+  dat %>%
+    unnest(stakeFrozen) %>%
+    filter(!is.na(slashed)) %>%
+    select(roundNumber, slashed) %>%
+    rename(frozen = slashed)
+}
+
+
+frozenDiversity <- function(frozenNodes, index = invsimpson) {
+  frozenNodes %>%
+    group_by(roundNumber) %>%
+    summarise(diversity = index(table(frozen)), .groups = "drop")
 }
 
 

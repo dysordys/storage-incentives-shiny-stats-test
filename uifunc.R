@@ -4,18 +4,6 @@ roundsSlider <- function(inputId = "roundRange", min, max, value) {
 }
 
 
-heightSlider <- function(inputId, min = 200) {
-  sliderInput(inputId, label = "Figure height", min = min, max = 2500,
-              value = 500, round = TRUE, width = "150%")
-}
-
-
-widthSlider <- function(inputId) {
-  sliderInput(inputId, label = "Figure width", min = 200, max = 4000,
-              value = 850, round = TRUE, width = "150%")
-}
-
-
 depthSelect <- function(inputId, depths = 1:9) {
   selectInput(inputId, label = "Depth:", choices = depths, selected = 8)
 }
@@ -57,10 +45,6 @@ revealerTabset <- function(depths) {
       )
     ),
     tabPanel(
-      title = "Price change",
-      verticalLayout(plotOutput("outPriceFig"))
-    ),
-    tabPanel(
       title = "Reveals vs. commits",
       verticalLayout(
         radioButtons(inputId = "inaccFilt", label = "Filter rounds for:",
@@ -74,6 +58,10 @@ revealerTabset <- function(depths) {
         tableOutput("outRevealCommitTab")
       )
     ),
+    tabPanel(
+      title = "Price change",
+      verticalLayout(plotOutput("outPriceFig"))
+    )
   )
 }
 
@@ -102,7 +90,24 @@ skippedRoundsTabset <- function() {
 rewardTabset <- function(depths, rewardRange) {
   tabsetPanel(
     tabPanel(
-      title = "Reward distribution",
+      title = "Distribution of wins",
+      verticalLayout(
+        fluidRow(column(width = 2, uiOutput(outputId = "depthWD"))),
+        plotOutput("outWinDistrFig")
+      )
+    ),
+    tabPanel(
+      title = "Wins across neighbourhoods",
+      verticalLayout(
+        fluidRow(
+          column(width = 2, uiOutput(outputId = "depthWins")),
+          column(width = 2, uiOutput(outputId = "winNhoodSelect"))
+        ),
+        plotOutput("outWinNhoodFig")
+      )
+    ),
+    tabPanel(
+      title = "Distribution of rewards",
       verticalLayout(
         fluidRow(
           column(width = 2,
@@ -118,36 +123,13 @@ rewardTabset <- function(depths, rewardRange) {
       )
     ),
     tabPanel(
-      title = "Wins across neighbourhoods",
-      verticalLayout(
-        fluidRow(
-          column(width = 2, uiOutput(outputId = "depthWins")),
-          column(width = 2, uiOutput(outputId = "winNhoodSelect"))
-        ),
-        plotOutput("outWinNhoodFig")
-      )
-    ),
-    tabPanel(
-      title = "Distribution of wins",
-      verticalLayout(
-        fluidRow(column(width = 2, uiOutput(outputId = "depthWD"))),
-        plotOutput("outWinDistrFig")
-      )
-    ),
-    tabPanel(
-      title = "Total reward (neighbourhoods)",
+      title = "Reward per neighbourhood",
       verticalLayout(
         fluidRow(
           column(width = 2, uiOutput(outputId = "depthTR")),
           column(width = 2, uiOutput(outputId = "rewardNhoodSelect"))
         ),
         plotOutput("outRewardNhoodFig")
-      )
-    ),
-    tabPanel(
-      title = "Total reward (nodes)",
-      verticalLayout(
-        plotOutput("outRewardNodeFig")
       )
     )
   )
@@ -166,6 +148,21 @@ nodeTabset <- function(depths) {
                        choices = c("Linear", "Logarithmic")),
           plotOutput("outDepthFig")
         ))
+      )
+    ),
+    tabPanel(
+      title = "Distribution of nodes",
+      verticalLayout(
+        fluidRow(
+          column(width = 2, uiOutput(outputId = "depthNodesDistr"))
+        ),
+        plotOutput("outNodeDistrFig")
+      )
+    ),
+    tabPanel(
+      title = "Reward per node",
+      verticalLayout(
+        plotOutput("outRewardNodeFig")
       )
     ),
     tabPanel(
@@ -191,15 +188,6 @@ nodeTabset <- function(depths) {
         ),
         plotOutput("outWinsNodesPerNhoodFig")
       )
-    ),
-    tabPanel(
-      title = "Distribution of nodes",
-      verticalLayout(
-        fluidRow(
-          column(width = 2, uiOutput(outputId = "depthNodesDistr"))
-        ),
-        plotOutput("outNodeDistrFig")
-      )
     )
   )
 }
@@ -208,7 +196,15 @@ nodeTabset <- function(depths) {
 stakeTabset <- function(depths) {
   tabsetPanel(
     tabPanel(
-      title = "Sum of stakes across neighbourhoods",
+      title = "Staked nodes",
+      fluidRow(
+        column(width = 2, uiOutput(outputId = "depthStakedNodes")),
+        column(width = 2, uiOutput(outputId = "stakedNodesNhoodSelect"))
+      ),
+      plotOutput("outStakedNodesFig")
+    ),
+    tabPanel(
+      title = "Stakes across neighbourhoods",
       fluidRow(
         column(width = 2, uiOutput(outputId = "depthStakes")),
         column(width = 2, uiOutput(outputId = "stakeNhoodSelect"))
@@ -216,17 +212,9 @@ stakeTabset <- function(depths) {
       plotOutput("outStakesNhoodFig")
     ),
     tabPanel(
-      title = "Distribution of sum of stakes",
+      title = "Distribution of stakes",
       fluidRow(column(width = 2, uiOutput(outputId = "depthStakeDistr"))),
       plotOutput("outStakesNodeFig")
-    ),
-    tabPanel(
-      title = "Staked nodes",
-      fluidRow(
-        column(width = 2, uiOutput(outputId = "depthStakedNodes")),
-        column(width = 2, uiOutput(outputId = "stakedNodesNhoodSelect"))
-      ),
-      plotOutput("outStakedNodesFig")
     )
   )
 }

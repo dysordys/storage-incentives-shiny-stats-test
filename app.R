@@ -129,7 +129,7 @@ server <- function(input, output) {
   )
   output$rewardNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelTotalReward",
-                nhoods = nhoodsWinDistr(dat(), input$depthSelTotalReward))
+                nhoods = nhoodList(dat(), input$depthSelTotalReward))
   )
 
   output$outRewardNodeFig <- renderPlot(

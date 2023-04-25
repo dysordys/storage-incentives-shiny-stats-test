@@ -36,13 +36,6 @@ restrictDepth <- function(dat, depths) {
 }
 
 
-restrictRoundsDepth <- function(dat, roundRange, depths) {
-  dat %>%
-    restrictRounds(roundRange) %>%
-    restrictDepth(depths)
-}
-
-
 roundsToPlot <- function(roundRange, maxPoints) {
   if (isValidRoundRange(roundRange)) {
     diff <- round(roundRange[2]) - round(roundRange[1])
@@ -104,24 +97,6 @@ inaccurateRevealerStats <- function(dat) {
 }
 
 
-chisqUnif <- function(vec) {
-  spgs::chisq.unif.test(x = vec, interval = range(vec))
-}
-
-
-chisqUnifMissedRounds <- function(dat) {
-  chisqUnif(pull(dat, roundNumber))$p.value %>%
-    round(5) %>%
-    str_c("Chi-squared test of uniformity: p = ", ., " ", case_when(
-      . < 0.01 ~ "(i.e., skipped rounds are not uniformly distributed)",
-      . < 0.05 ~ "(i.e., skipped rounds are unlikely to be uniformly distributed)",
-      . < 0.1  ~ str_c("(i.e., skipped rounds may not be uniformly distributed, ",
-                       "but it is difficult to say)"),
-      TRUE ~ "(i.e., assumption of uniformity cannot be rejected)",
-    ))
-}
-
-
 skippedRounds <- function(dat) {
   dat %>%
     filter(event == "won") %>%
@@ -137,11 +112,6 @@ skippedRoundDistr <- function(dat) {
 }
 
 
-nhoodsDec2Bin <- function(dat) {
-  mutate(dat, nhood = R.utils::intToBin(nhood))
-}
-
-
 proximity <- function(fst, snd) {
   maxPO <- 16L
   b <- min((maxPO - 1) %/% 8 + 1, length(fst))
@@ -153,11 +123,6 @@ proximity <- function(fst, snd) {
     }
   }
   return(maxPO)
-}
-
-
-rewardRange <- function(dat) {
-  range(dat$rewardAmount, na.rm = TRUE)
 }
 
 
@@ -253,17 +218,6 @@ nhoodList <- function(dat, .depth, na.rm = TRUE) {
   dat %>%
     depthFilter(.depth) %>%
     filter(if (na.rm) !is.na(nhood) else TRUE) %>%
-    pull(nhood) %>%
-    unique() %>%
-    sort() %>%
-    R.utils::intToBin()
-}
-
-
-nhoodsWinDistr <- function(dat, .depth) {
-  dat %>%
-    rewardNhoodDistr() %>%
-    filter(depth == .depth) %>%
     pull(nhood) %>%
     unique() %>%
     sort() %>%

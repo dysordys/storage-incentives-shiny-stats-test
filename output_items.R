@@ -40,7 +40,7 @@ revealersPerNhoodFig <- function(dat, .depth, .f = mean, sortBy = "Honest reveal
 }
 
 
-priceFig <- function(dat, maxPoints = 3001) {
+priceFig <- function(dat, maxPoints = 10001) {
   pdat <- priceTab(dat)
   yscale <- max(pdat$price) / max(pdat$honest)
   pdat %>%

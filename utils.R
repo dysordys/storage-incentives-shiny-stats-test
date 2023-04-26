@@ -57,6 +57,25 @@ revealersPerRound <- function(dat) {
 }
 
 
+inaccurateRevealers <- function(dat) {
+  dat %>%
+    left_join(revealersPerRound(dat), by = "roundNumber") %>%
+    filter(revealers != honest) %>%
+    filter(event == "revealed") %>%
+    group_by(roundNumber) %>%
+    count(id) %>%
+    ungroup()
+}
+
+
+inaccurateRevealerDiversity <- function(dat, index = invsimpson) {
+  dat %>%
+    inaccurateRevealers() %>%
+    group_by(roundNumber) %>%
+    summarise(richnessOfReveals = n(), diversityOfReveals = index(n), .groups = "drop")
+}
+
+
 revealerNhoodSummary <- function(dat, .f = mean, depths = 1:9) {
   dat %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
@@ -137,16 +156,6 @@ rewardNhoodDistr <- function(dat) {
 }
 
 
-unifQuantileNull <- function(p, rounds, nhoods) {
-  qbinom(p, size = rounds, prob = 1 / nhoods)
-}
-
-
-unifDistrNull <- function(x, rounds, nhoods) {
-  dbinom(x, size = rounds, prob = 1 / nhoods)
-}
-
-
 nodesPerNhood <- function(dat) {
   dat %>%
     filter(!is.na(nhood)) %>%
@@ -196,16 +205,6 @@ depthsWinDistr <- function(dat) {
     pull(depth) %>%
     unique() %>%
     sort()
-}
-
-
-depthsRevealers <- function(dat) {
-  dat %>%
-    filter(roundNumber %ni% roundsWithoutWinner(.)) %>%
-    filter(event == "revealed") %>%
-    depthDistr() %>%
-    filter(depth > 0) %>%
-    pull(depth)
 }
 
 

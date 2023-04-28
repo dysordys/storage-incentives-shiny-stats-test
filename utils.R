@@ -217,10 +217,13 @@ nhoodList <- function(dat, .depth, na.rm = TRUE) {
   dat %>%
     depthFilter(.depth) %>%
     filter(if (na.rm) !is.na(nhood) else TRUE) %>%
-    pull(nhood) %>%
-    unique() %>%
-    sort() %>%
-    R.utils::intToBin()
+    select(nhood) %>%
+    distinct() %>%
+    arrange(nhood) %>%
+    mutate(nhoodBin = R.utils::intToBin(nhood)) %>%
+    mutate(nhoodHex = R.utils::intToHex(nhood)) %>%
+    mutate(nhoodOut = str_c(nhoodBin, " / 0x", nhoodHex)) %>%
+    pull(nhoodOut)
 }
 
 

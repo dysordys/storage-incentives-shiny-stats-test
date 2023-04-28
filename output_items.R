@@ -13,7 +13,8 @@ themeApp <- function(size = 18, margin = c(0.2, 2, 0.2, 0.2), nhood.x = FALSE) {
 
 
 nhoodHighlight <- function(xintercept = NA, alpha = 0.5, linetype = "dashed", ...) {
-  geom_vline(xintercept = xintercept, alpha = alpha, linetype = linetype)
+  geom_vline(xintercept = str_remove(xintercept, pattern = " /.*"),
+             alpha = alpha, linetype = linetype)
 }
 
 

@@ -16,8 +16,8 @@ ui <- fluidPage(
     title = "View data on:",
     roundsSlider(inputId = "roundRange",
                  min = min(dataOrig$roundNumber), max = max(dataOrig$roundNumber),
-                 # 3300 rounds is approximately 30 days:
-                 value = c(max(dataOrig$roundNumber) - 3300, max(dataOrig$roundNumber))),
+                 # 3410 rounds is approximately 30 days:
+                 value = c(max(dataOrig$roundNumber) - 3410, max(dataOrig$roundNumber))),
     tabPanel(title = "Revealers", revealerTabset(depths(dataOrig))),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
     tabPanel(title = "Rewards", rewardTabset(depths(dataOrig), rewardRange(dataOrig))),

@@ -322,3 +322,29 @@ stakedNodesFig <- function(dat, .depth, highlightNhood = NA) {
     labs(x = "neighbourhood", y = "number of staked nodes") +
     themeApp(nhood.x = TRUE)
 }
+
+
+frozenNodesFig <- function(dat, .depth, highlightNhood = NA) {
+  dat %>%
+    depthFilter(.depth) %>%
+    countFrozenNodes() %>%
+    sortNhoodBy(nFrozen) %>%
+    ggplot(aes(x = nhood, y = nFrozen)) +
+    geom_point(colour = "steelblue", alpha = 0.75, size = 2) +
+    geom_col(colour = NA, fill = "steelblue", alpha = 0.2) +
+    nhoodHighlight(xintercept = highlightNhood) +
+    labs(x = "neighbourhood", y = "cumulative number of frozen nodes") +
+    themeApp(nhood.x = TRUE)
+}
+
+
+freezesThroughTimeFig <- function(dat, maxPoints = 10001) {
+  pdat <- freezesThroughTime(dat)
+  pdat %>%
+    filter(roundNumber %in% roundsToPlot(range(pdat$roundNumber), maxPoints)) %>%
+    ggplot(aes(x = roundNumber, y = nFrozen)) +
+    geom_line(colour = "steelblue", alpha = 0.4) +
+    geom_smooth(colour = "steelblue", se = FALSE) +
+    labs(x = "round", y = "number of frozen nodes") +
+    themeApp()
+}

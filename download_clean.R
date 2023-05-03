@@ -99,6 +99,6 @@ mergeData <- function(oldData, newData) {
 }
 
 
-fetchNhoodJson <- function(url = "https://api.swarmscan.io/v1/network/stats") {
+fetchNhoodJson <- function(url = "https://api.swarmscan.io/v1/network/neighborhoods") {
   fetchJson(url)
 }

@@ -17,12 +17,13 @@ ui <- fluidPage(
     roundsSlider(inputId = "roundRange",
                  min = min(dataOrig$roundNumber), max = max(dataOrig$roundNumber),
                  # 3410 rounds is approximately 30 days:
-                 value = c(max(dataOrig$roundNumber) - 3410, max(dataOrig$roundNumber))),
-    tabPanel(title = "Revealers", revealerTabset(depths(dataOrig))),
+                 value = c(max(dataOrig$roundNumber)-3410, max(dataOrig$roundNumber))),
+    tabPanel(title = "Revealers", revealerTabset()),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
-    tabPanel(title = "Rewards", rewardTabset(depths(dataOrig), rewardRange(dataOrig))),
-    tabPanel(title = "Nodes", nodeTabset(depths(dataOrig))),
-    tabPanel(title = "Stakes", stakeTabset(depths(dataOrig)))
+    tabPanel(title = "Rewards", rewardTabset(rewardRange(dataOrig))),
+    tabPanel(title = "Nodes", nodeTabset()),
+    tabPanel(title = "Stakes", stakeTabset()),
+    tabPanel(title = "Freezes", freezeTabset())
   )
 )
 
@@ -106,7 +107,7 @@ server <- function(input, output) {
     height = 500
   )
   output$depthWins <- renderUI(
-    depthSelect(inputId = "depthSelWinNhood", depths = depthsWinDistr(dat()))
+    depthSelect(inputId = "depthSelWinNhood", depths = depthsWith(dat()))
   )
   output$winNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelWinNhood",
@@ -117,7 +118,7 @@ server <- function(input, output) {
     winNhoodHistFig(dat(), input$depthSelWinDistr)
   )
   output$depthWD <- renderUI(
-    depthSelect(inputId = "depthSelWinDistr", depths = depthsWinDistr(dat()))
+    depthSelect(inputId = "depthSelWinDistr", depths = depthsWith(dat()))
   )
 
   output$outRewardNhoodFig <- renderPlot(
@@ -125,7 +126,7 @@ server <- function(input, output) {
     height = 500
   )
   output$depthTR <- renderUI(
-    depthSelect(inputId = "depthSelTotalReward", depths = depthsWinDistr(dat()))
+    depthSelect(inputId = "depthSelTotalReward", depths = depthsWith(dat()))
   )
   output$rewardNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelTotalReward",
@@ -186,7 +187,7 @@ server <- function(input, output) {
     height = 500
   )
   output$depthStakes <- renderUI(
-    depthSelect(inputId = "depthSelStake", depths = depthsWinDistr(dat()))
+    depthSelect(inputId = "depthSelStake", depths = depthsWith(dat()))
   )
   output$stakeNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelStake",
@@ -210,6 +211,24 @@ server <- function(input, output) {
   output$stakedNodesNhoodSelect <- renderUI(
     nhoodSelect(inputId = "nhoodSelStakedNodes",
                 nhoods = nhoodList(dat(), input$depthSelStakedNodes))
+  )
+
+
+  # Elements of tab "Freezes":
+  output$outFrozenNodesFig <- renderPlot(
+    frozenNodesFig(dat(), input$depthSelFrozenNodes, input$nhoodSelFrozenNodes),
+    height = 500
+  )
+  output$depthFrozenNodes <- renderUI(
+    depthSelect(inputId = "depthSelFrozenNodes", depths = depthsWith(dat(), frozenNodes))
+  )
+  output$frozenNodesNhoodSelect <- renderUI(
+    nhoodSelect(inputId = "nhoodSelFrozenNodes",
+                nhoods = frozenNodes(dat()) %>% nhoodList(input$depthSelFrozenNodes))
+  )
+
+  output$outFreezeThroughTimeFig <- renderPlot(
+    freezesThroughTimeFig(dat())
   )
 
 }

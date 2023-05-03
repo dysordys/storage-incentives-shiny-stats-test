@@ -14,7 +14,7 @@ nhoodSelect <- function(inputId, nhoods) {
 }
 
 
-revealerTabset <- function(depths) {
+revealerTabset <- function() {
   tabsetPanel(
     tabPanel(
       title = "Mean revealers per neighbourhood",
@@ -87,7 +87,7 @@ skippedRoundsTabset <- function() {
 }
 
 
-rewardTabset <- function(depths, rewardRange) {
+rewardTabset <- function(rewardRange) {
   tabsetPanel(
     tabPanel(
       title = "Distribution of wins",
@@ -136,7 +136,7 @@ rewardTabset <- function(depths, rewardRange) {
 }
 
 
-nodeTabset <- function(depths) {
+nodeTabset <- function() {
   tabsetPanel(
     tabPanel(
       title = "Depths",
@@ -193,7 +193,7 @@ nodeTabset <- function(depths) {
 }
 
 
-stakeTabset <- function(depths) {
+stakeTabset <- function() {
   tabsetPanel(
     tabPanel(
       title = "Staked nodes",
@@ -215,6 +215,24 @@ stakeTabset <- function(depths) {
       title = "Distribution of stakes",
       fluidRow(column(width = 2, uiOutput(outputId = "depthStakeDistr"))),
       plotOutput("outStakesNodeFig")
+    )
+  )
+}
+
+
+freezeTabset <- function() {
+  tabsetPanel(
+    tabPanel(
+      title = "Frozen nodes per neighbourhood",
+      fluidRow(
+        column(width = 2, uiOutput(outputId = "depthFrozenNodes")),
+        column(width = 2, uiOutput(outputId = "frozenNodesNhoodSelect"))
+      ),
+      plotOutput("outFrozenNodesFig")
+    ),
+    tabPanel(
+      title = "Freezes through time",
+      plotOutput("outFreezeThroughTimeFig")
     )
   )
 }

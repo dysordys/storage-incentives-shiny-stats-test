@@ -28,6 +28,11 @@ restrictRounds <- function(dat, roundRange) {
 }
 
 
+depthFilter <- function(dat, .depth, defaultDepth = 8L) {
+  filter(dat, depth == { if (length(.depth) == 1L) .depth else defaultDepth })
+}
+
+
 restrictDepth <- function(dat, depths) {
   dat %>%
     group_by(roundNumber) %>%
@@ -76,11 +81,11 @@ inaccurateRevealerDiversity <- function(dat, index = invsimpson) {
 }
 
 
-revealerNhoodSummary <- function(dat, .f = mean, depths = 1:9) {
+revealerNhoodSummary <- function(dat, .f = mean, .depth = 8L) {
   dat %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     mutate(inaccurate = revealers - honest) %>%
-    filter(depth %in% depths) %>%
+    depthFilter(.depth) %>%
     group_by(nhood) %>%
     summarise(honest = .f(honest), inaccurate = .f(inaccurate), .groups = "drop")
 }
@@ -187,11 +192,6 @@ depthDistr <- function(dat) {
 }
 
 
-depthFilter <- function(dat, .depth, defaultDepth = 8) {
-  filter(dat, depth == { if (length(.depth) == 1) .depth else defaultDepth })
-}
-
-
 depths <- function(dat) {
   depthDistr(dat) %>%
     filter(depth > 0) %>%
@@ -199,9 +199,8 @@ depths <- function(dat) {
 }
 
 
-depthsWinDistr <- function(dat) {
-  dat %>%
-    rewardNhoodDistr() %>%
+depthsWith <- function(dat, .f = rewardNhoodDistr) {
+  .f(dat) %>%
     pull(depth) %>%
     unique() %>%
     sort()
@@ -299,45 +298,36 @@ frozenNodes <- function(dat) {
   dat %>%
     unnest(stakeFrozen) %>%
     filter(!is.na(slashed)) %>%
-    select(roundNumber, slashed) %>%
+    select(roundNumber, depth, nhood, slashed) %>%
     rename(frozen = slashed)
 }
 
 
-frozenDiversity <- function(frozenNodes, index = invsimpson) {
-  frozenNodes %>%
+countFrozenNodes <- function(dat) {
+  dat %>%
+    frozenNodes() %>%
+    group_by(depth, nhood) %>%
+    summarise(nFrozen = n(), .groups = "drop")
+}
+
+
+freezesThroughTime <- function(dat) {
+  dat %>%
+    frozenNodes() %>%
     group_by(roundNumber) %>%
-    summarise(diversity = index(table(frozen)), .groups = "drop")
+    summarise(nFrozen = n(), .groups = "drop")
 }
 
 
-jsonNhoodNodes <- function(jsonHnood) jsonNhood$count
-
-
-jsonNhoodUnreachableNodes <- function(jsonNhood) jsonNhood$unreachableCount
-
-
-jsonNhoodTibble <- function(jsonNhood, variable) {
-  as_tibble(jsonNhood[[variable]], .name_repair = "unique") %>%
-    pivot_longer(cols = everything(), values_to = "nodes") %>%
-    mutate(name = if_else(str_detect(name, "\\.\\.\\.\\d"), "", name))
-}
-
-
-jsonNhoodUserAgents <- function(jsonNhood) {
-  jsonNhoodTibble(jsonNhood, "userAgents") %>%
-    rename(agent = name)
-}
-
-
-jsonNhoodCountries <- function(jsonNhood) {
-  jsonNhoodTibble(jsonNhood, "countries") %>%
-    rename(country = name)
-}
-
-
-jsonNhoodNhoods <- function(jsonNhood) {
-  jsonNhoodTibble(jsonNhood, "neighborhoods") %>%
-    rename(nhood = name) %>%
-    mutate(nhood = str_remove(nhood, "0b"))
+jsonNhoodTable <- function(jsonNhood) {
+  jsonNhood %>%
+    unnest(neighborhoods) %>%
+    mutate(across(everything(), compose(list, unlist))) %>%
+    pivot_longer(cols = everything(), names_to = "depth", values_to = "nhoods") %>%
+    mutate(depth = strtoi(depth)) %>%
+    mutate(nhoods = map(nhoods, ~tibble(nhood = names(.x), nodes = unname(.x)))) %>%
+    unnest(nhoods) %>%
+    mutate(nhood = str_remove(nhood, "0b")) %>% # Knock off starting "0b" from binary
+    mutate(nhood = strtoi(nhood, base = 2)) %>% # Convert to decimal integer
+    arrange(depth, nhood)
 }

@@ -45,7 +45,8 @@ priceFig <- function(dat, maxPoints = 10001) {
   pdat <- priceTab(dat)
   yscale <- max(pdat$price) / max(pdat$honest)
   pdat %>%
-    filter(roundNumber %in% roundsToPlot(range(pdat$roundNumber), maxPoints)) %>%
+    # Restrict the number of points to plot on the graph:
+    #filter(roundNumber %in% roundsToPlot(range(pdat$roundNumber), maxPoints)) %>%
     ggplot(aes(x = roundNumber)) +
     geom_line(aes(y = price), colour = "steelblue", alpha = 0.4) +
     geom_line(aes(y = honest * yscale), colour = "goldenrod", alpha = 0.2) +
@@ -338,10 +339,9 @@ frozenNodesFig <- function(dat, .depth, highlightNhood = NA) {
 }
 
 
-freezesThroughTimeFig <- function(dat, maxPoints = 10001) {
-  pdat <- freezesThroughTime(dat)
-  pdat %>%
-    filter(roundNumber %in% roundsToPlot(range(pdat$roundNumber), maxPoints)) %>%
+freezesThroughTimeFig <- function(dat) {
+  dat %>%
+    freezesThroughTime() %>%
     ggplot(aes(x = roundNumber, y = nFrozen)) +
     geom_line(colour = "steelblue", alpha = 0.4) +
     geom_smooth(colour = "steelblue", se = FALSE) +

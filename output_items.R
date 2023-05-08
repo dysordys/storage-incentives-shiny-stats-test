@@ -345,6 +345,6 @@ freezesThroughTimeFig <- function(dat) {
     ggplot(aes(x = roundNumber, y = nFrozen)) +
     geom_line(colour = "steelblue", alpha = 0.4) +
     geom_smooth(colour = "steelblue", se = FALSE) +
-    labs(x = "round", y = "number of frozen nodes") +
+    labs(x = "round", y = "number of freezing events") +
     themeApp()
 }

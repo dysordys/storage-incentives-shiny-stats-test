@@ -1,6 +1,7 @@
 roundsSlider <- function(inputId = "roundRange", min, max, value) {
   sliderInput(inputId, label = "Range of rounds", step = 1,
-              min = min, max = max, value = value, width = "95%")
+              # 3410 rounds is approximately 30 days:
+              min = min, max = max, value = c(max - 3410, max), width = "95%")
 }
 
 

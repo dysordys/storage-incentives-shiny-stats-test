@@ -61,7 +61,7 @@ priceFig <- function(dat, maxPoints = 10001) {
 
 
 inaccurateStats <- function(dat) {
-  s <- inaccurateRevealerStats(dat)
+  s <- inaccurateRevealerFrequency(dat)
   str_c("Rounds with inaccurate revealers: ", s$n, " out of ", s$rounds,
         ", or ", round(100 * s$p, 2), "%")
 }
@@ -346,5 +346,17 @@ freezesThroughTimeFig <- function(dat) {
     geom_line(colour = "steelblue", alpha = 0.4) +
     geom_smooth(colour = "steelblue", se = FALSE) +
     labs(x = "round", y = "number of freezing events") +
+    themeApp()
+}
+
+
+revealerMajorityFracHistFig <- function(dat, excludeRoundsWithoutDissenters = TRUE) {
+  dat %>%
+    revealStats() %>%
+    filter(richness > 1 * excludeRoundsWithoutDissenters) %>%
+    ggplot(aes(x = majorityFraction)) +
+    geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 20) +
+    labs(x = "fraction of reveals that were of the majority opinion",
+         y = "number of rounds with given fraction") +
     themeApp()
 }

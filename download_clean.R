@@ -37,11 +37,11 @@ nhoodDec <- function(overlay, depth = 8L) {
 }
 
 
-roundsToDatetime <- function(rounds, now) {
+roundsToDate <- function(rounds, today) {
   maxRound <- max(rounds)
-  nowNum <- as.numeric(now)
-  map_dbl(rounds, function(x) nowNum - 760 * (maxRound - x)) %>%
-    lubridate::as_datetime()
+  todayNum <- as.numeric(today)
+  map_dbl(rounds, function(x) todayNum - 760 * (maxRound - x)) %>%
+    lubridate::as_date()
 }
 
 
@@ -65,14 +65,15 @@ reshapeEvents <- function(events) {
       mutate(., reserveCommitment = NA_character_) } %>%
     { if ("stakeFrozen" %in% names(.)) . else
       mutate(., stakeFrozen = NA) } %>%
-    mutate(id = if_else(type == "event", reserveCommitment, hash)) %>%
+    mutate(reserveCommitmentHash = if_else(type == "event", reserveCommitment, hash)) %>%
     mutate(event = if_else(type == "event", name, "won")) %>%
     mutate(overlay = if_else(event == "won", winner.overlay, overlay)) %>%
     mutate(stake = if_else(event == "won", winner.stake, stake)) %>%
     mutate(depth = if_else(event == "won", winner.depth, depth)) %>%
     mutate(stakeDensity = if_else(event == "won", winner.stakeDensity, stakeDensity)) %>%
     mutate(stakeFrozen = map(stakeFrozen, cleanStakeFrozen)) %>%
-    relocate(event, id, rewardAmount, depth, stake, overlay, stakeFrozen) %>%
+    relocate(event, reserveCommitmentHash, rewardAmount, depth, stake,
+             overlay, stakeFrozen) %>%
     select(-contains("winner"), -contains("roundNumber"), -starts_with("count"),
            -reserveCommitment, -hash, -name, -topics, -type)
 }

@@ -233,6 +233,13 @@ freezeTabset <- function() {
     tabPanel(
       title = "Freezes through time",
       plotOutput("outFreezeThroughTimeFig")
+    ),
+    tabPanel(
+      title = "Majority reveals",
+      radioButtons(inputId = "revealerMajorityExcludePerfect",
+                   label = "Include rounds with no dissenting reveals?",
+                   choices = c("Yes" = FALSE, "No" = TRUE)), # Include means not exclude
+      plotOutput("revealerMajorityFracHistFig")
     )
   )
 }

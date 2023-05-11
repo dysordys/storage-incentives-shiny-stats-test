@@ -17,19 +17,19 @@ accumPrice <- function(redundancyVec, initPrice) {
 }
 
 
-isValidRoundRange <- function(roundRange) {
-  (length(roundRange) == 2) && (roundRange[1] <= roundRange[2])
+isValidRoundRange <- function(minRound, maxRound) {
+  (length(minRound) == 1) && (length(maxRound) == 1) && (minRound <= maxRound)
 }
 
 
-restrictRounds <- function(dat, roundRange) {
-  if (isValidRoundRange(roundRange))
-    filter(dat, roundNumber %in% reduce(round(roundRange), `:`)) else dat
+restrictRounds <- function(dat, minRound, maxRound) {
+  if (isValidRoundRange(minRound, maxRound))
+    filter(dat, roundNumber <= round(minRound) & roundNumber >= round(maxRound)) else dat
 }
 
 
-restrictDate <- function(dat, dateRange) {
-  filter(dat, date >= dateRange[1] & date <= dateRange[2])
+restrictDate <- function(dat, minDate, maxDate) {
+  filter(dat, date >= minDate & date <= maxDate)
 }
 
 
@@ -61,28 +61,32 @@ roundsToPlot <- function(roundRange, maxPoints) {
 revealersPerRound <- function(dat) {
   dat %>%
     group_by(roundNumber) %>%
-    mutate(honest = (id == id[event == "won"])) %>%
+    mutate(honest = (reserveCommitmentHash == reserveCommitmentHash[event == "won"])) %>%
     filter(event == "revealed") %>%
     summarise(revealers = n(), honest = sum(honest), .groups = "drop")
 }
 
 
-inaccurateRevealers <- function(dat) {
+reveals <- function(dat) {
   dat %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
-    filter(revealers != honest) %>%
     filter(event == "revealed") %>%
     group_by(roundNumber) %>%
-    count(id) %>%
+    count(reserveCommitmentHash) %>%
     ungroup()
 }
 
 
-inaccurateRevealerDiversity <- function(dat, index = invsimpson) {
+revealStats <- function(dat, index = invsimpson) {
   dat %>%
-    inaccurateRevealers() %>%
+    reveals() %>%
     group_by(roundNumber) %>%
-    summarise(richnessOfReveals = n(), diversityOfReveals = index(n), .groups = "drop")
+    summarise(totalReveals = sum(n),
+              majorityReveals = max(n),
+              majorityFraction = majorityReveals / totalReveals,
+              richness = n(),
+              diversity = index(n),
+              .groups = "drop")
 }
 
 
@@ -118,7 +122,7 @@ missedRounds <- function(dat) {
 }
 
 
-inaccurateRevealerStats <- function(dat) {
+inaccurateRevealerFrequency <- function(dat) {
   tab <- dat %>% pricePerRound()
   rounds <- nrow(tab)
   roundsWithInaccurates <- nrow(filter(tab, revealers != honest))

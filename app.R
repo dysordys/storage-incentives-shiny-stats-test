@@ -6,7 +6,10 @@ source("output_items.R")
 source("uifunc.R")
 
 
-dataOrig <- read_rds("data.rds")
+dataOrig <- read_rds("data.rds") %>%
+  select(roundNumber, event, reserveCommitmentHash, rewardAmount,
+         depth, stake, overlay, nhood, rewardTo, stakeFrozen,
+         date) # For now, only these columns are needed; can add more
 
 
 
@@ -28,7 +31,7 @@ ui <- fluidPage(
 
 server <- function(input, output) {
 
-  dat <- reactive(restrictDate(dataOrig, input$timeRange))
+  dat <- reactive(restrictDate(dataOrig, input$timeRange[1], input$timeRange[2]))
 
 
   # Elements of tab "Reveal":
@@ -228,6 +231,9 @@ server <- function(input, output) {
     freezesThroughTimeFig(dat())
   )
 
+  output$revealerMajorityFracHistFig <- renderPlot(
+    revealerMajorityFracHistFig(dat(), input$revealerMajorityExcludePerfect)
+  )
 }
 
 
@@ -238,5 +244,5 @@ shinyApp(ui = ui, server = server)
 # fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
 #   cleanData() %>%
 #   mergeData(read_rds("data.rds")) %>%
-#   mutate(date = roundsToDatetime(roundNumber, lubridate::now())) %>%
+#   mutate(date = roundsToDate(roundNumber, lubridate::today())) %>%
 #   write_rds("data.rds", compress = "xz")

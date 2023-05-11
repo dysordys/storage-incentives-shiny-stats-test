@@ -14,8 +14,7 @@ ui <- fluidPage(
   titlePanel("Redistribution data dashboard"),
   navbarPage(
     title = "View data on:",
-    roundsSlider(inputId = "roundRange",
-                 min = min(dataOrig$roundNumber), max = max(dataOrig$roundNumber)),
+    timeSlider(inputId = "timeRange", min=min(dataOrig$date), max=max(dataOrig$date)),
     tabPanel(title = "Revealers", revealerTabset()),
     tabPanel(title = "Skipped rounds", skippedRoundsTabset()),
     tabPanel(title = "Rewards", rewardTabset(rewardRange(dataOrig))),
@@ -29,7 +28,7 @@ ui <- fluidPage(
 
 server <- function(input, output) {
 
-  dat <- reactive(restrictRounds(dataOrig, input$roundRange))
+  dat <- reactive(restrictDate(dataOrig, input$timeRange))
 
 
   # Elements of tab "Reveal":
@@ -239,4 +238,5 @@ shinyApp(ui = ui, server = server)
 # fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
 #   cleanData() %>%
 #   mergeData(read_rds("data.rds")) %>%
+#   mutate(date = roundsToDatetime(roundNumber, lubridate::now())) %>%
 #   write_rds("data.rds", compress = "xz")

@@ -37,6 +37,14 @@ nhoodDec <- function(overlay, depth = 8L) {
 }
 
 
+roundsToDatetime <- function(rounds, now) {
+  maxRound <- max(rounds)
+  nowNum <- as.numeric(now)
+  map_dbl(rounds, function(x) nowNum - 760 * (maxRound - x)) %>%
+    lubridate::as_datetime()
+}
+
+
 cleanStakeFrozen <- function(stakeFrozenElement) {
   if (is.null(stakeFrozenElement)) tibble(value = NA) else as_tibble(stakeFrozenElement)
 }

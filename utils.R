@@ -28,6 +28,11 @@ restrictRounds <- function(dat, roundRange) {
 }
 
 
+restrictDate <- function(dat, dateRange) {
+  filter(dat, date >= dateRange[1] & date <= dateRange[2])
+}
+
+
 depthFilter <- function(dat, .depth, defaultDepth = 8L) {
   filter(dat, depth == { if (length(.depth) == 1L) .depth else defaultDepth })
 }

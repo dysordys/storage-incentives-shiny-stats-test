@@ -232,8 +232,17 @@ server <- function(input, output) {
   )
 
   output$revealerMajorityFracHistFig <- renderPlot(
-    revealerMajorityFracHistFig(dat(), input$revealerMajorityExcludePerfect)
+    revealerMajorityFracHistFig(dat(), input$revealerMajorityIncludePerfect == "Yes")
   )
+
+  output$revealerRichnessFig <- renderPlot(
+    revealerRichnessFig(dat(), input$revealerRichnessIncludePerfect == "Yes")
+  )
+
+  output$revealerDiversityFig <- renderPlot(
+    revealerDiversityFig(dat(), input$revealerDiversityIncludePerfect == "Yes")
+  )
+
 }
 
 
@@ -243,6 +252,6 @@ shinyApp(ui = ui, server = server)
 # source("download_clean.R")
 # fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
 #   cleanData() %>%
-#   mergeData(read_rds("data.rds")) %>%
+#   mergeData(read_rds("data.rds") %>% select(-date)) %>%
 #   mutate(date = roundsToDate(roundNumber, lubridate::today())) %>%
 #   write_rds("data.rds", compress = "xz")

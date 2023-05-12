@@ -350,13 +350,38 @@ freezesThroughTimeFig <- function(dat) {
 }
 
 
-revealerMajorityFracHistFig <- function(dat, excludeRoundsWithoutDissenters = TRUE) {
+revealerMajorityFracHistFig <- function(dat, includeRoundsWithoutDissenters = FALSE) {
   dat %>%
     revealStats() %>%
-    filter(richness > 1 * excludeRoundsWithoutDissenters) %>%
+    filter(richness > 1 - includeRoundsWithoutDissenters) %>%
     ggplot(aes(x = majorityFraction)) +
     geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 20) +
-    labs(x = "fraction of reveals that were of the majority opinion",
-         y = "number of rounds with given fraction") +
+    scale_x_continuous(name = "fraction of reveals that were of the majority opinion",
+                       limits = c(0, 1.05), breaks = 0:4 / 4, labels = abbreviate) +
+    scale_y_continuous(name = "number of rounds with given fraction") +
+    themeApp()
+}
+
+
+revealerRichnessFig <- function(dat, includeRoundsWithoutDissenters = FALSE) {
+  dat %>%
+    revealStats() %>%
+    filter(richness > 1 - includeRoundsWithoutDissenters) %>%
+    ggplot(aes(x = richness)) +
+    geom_bar(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
+    scale_x_continuous(name = "richness of reveals") +
+    scale_y_continuous(name = "number of rounds with given richness") +
+    themeApp()
+}
+
+
+revealerDiversityFig <- function(dat, includeRoundsWithoutDissenters = FALSE) {
+  dat %>%
+    revealStats() %>%
+    filter(richness > 1 - includeRoundsWithoutDissenters) %>%
+    ggplot(aes(x = diversity)) +
+    geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 20) +
+    scale_x_continuous(name = "diversity of reveals") +
+    scale_y_continuous(name = "number of rounds with given diversity") +
     themeApp()
 }

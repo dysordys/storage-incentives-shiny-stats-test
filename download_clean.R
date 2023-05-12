@@ -39,8 +39,9 @@ nhoodDec <- function(overlay, depth = 8L) {
 
 roundsToDate <- function(rounds, today) {
   maxRound <- max(rounds)
-  todayNum <- as.numeric(today)
+  todayNum <- as.numeric(lubridate::as_datetime(today))
   map_dbl(rounds, function(x) todayNum - 760 * (maxRound - x)) %>%
+    lubridate::as_datetime() %>%
     lubridate::as_date()
 }
 

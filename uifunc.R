@@ -236,23 +236,14 @@ freezeTabset <- function() {
     ),
     tabPanel(
       title = "Majority reveals",
-      radioButtons(inputId = "revealerMajorityIncludePerfect",
-                   label = "Include rounds with no dissenting reveals?",
-                   choices = c("Yes", "No")),
       plotOutput("revealerMajorityFracHistFig")
     ),
     tabPanel(
       title = "Richness of reveals",
-      radioButtons(inputId = "revealerRichnessIncludePerfect",
-                   label = "Include rounds with no dissenting reveals?",
-                   choices = c("Yes", "No")),
       plotOutput("revealerRichnessFig")
     ),
     tabPanel(
       title = "Diversity of reveals",
-      radioButtons(inputId = "revealerDiversityIncludePerfect",
-                   label = "Include rounds with no dissenting reveals?",
-                   choices = c("Yes", "No")),
       plotOutput("revealerDiversityFig")
     )
   )

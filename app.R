@@ -232,15 +232,15 @@ server <- function(input, output) {
   )
 
   output$revealerMajorityFracHistFig <- renderPlot(
-    revealerMajorityFracHistFig(dat(), input$revealerMajorityIncludePerfect == "Yes")
+    revealerMajorityFracHistFig(dat())
   )
 
   output$revealerRichnessFig <- renderPlot(
-    revealerRichnessFig(dat(), input$revealerRichnessIncludePerfect == "Yes")
+    revealerRichnessFig(dat())
   )
 
   output$revealerDiversityFig <- renderPlot(
-    revealerDiversityFig(dat(), input$revealerDiversityIncludePerfect == "Yes")
+    revealerDiversityFig(dat())
   )
 
 }

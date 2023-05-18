@@ -148,7 +148,8 @@ skippedRoundDistrFig <- function(dat) {
 rewardDistrFig <- function(dat, xtrans = "Logarithmic",
                            ytrans = "Square-root transformed") {
   dat %>%
-    skippedRounds() %>%
+    filter(event == "won") %>%
+    right_join(skippedRoundsTibble(dat), by = "roundNumber") %>%
     mutate(skip = as_factor(skip)) %>%
     ggplot(aes(x = rewardAmount, fill = skip)) +
     geom_histogram(colour = NA, alpha = 0.8, bins = 100, position = "stack") +
@@ -350,38 +351,41 @@ freezesThroughTimeFig <- function(dat) {
 }
 
 
-revealerMajorityFracHistFig <- function(dat, includeRoundsWithoutDissenters = FALSE) {
+revealerMajorityFracHistFig <- function(dat) {
   dat %>%
-    revealStats() %>%
-    filter(richness > 1 - includeRoundsWithoutDissenters) %>%
-    ggplot(aes(x = majorityFraction)) +
+    extractRevealerStat(metric = "majorityFraction") %>%
+    mutate(majorityFraction = as_factor(majorityFraction)) %>%
+    ggplot(aes(x = value)) +
     geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 20) +
     scale_x_continuous(name = "fraction of reveals that were of the majority opinion",
                        limits = c(0, 1.05), breaks = 0:4 / 4, labels = abbreviate) +
     scale_y_continuous(name = "number of rounds with given fraction") +
+    facet_wrap(~majorityFraction) +
     themeApp()
 }
 
 
-revealerRichnessFig <- function(dat, includeRoundsWithoutDissenters = FALSE) {
+revealerRichnessFig <- function(dat) {
   dat %>%
-    revealStats() %>%
-    filter(richness > 1 - includeRoundsWithoutDissenters) %>%
-    ggplot(aes(x = richness)) +
+    extractRevealerStat(metric = "richness") %>%
+    mutate(richness = as_factor(richness)) %>%
+    ggplot(aes(x = value)) +
     geom_bar(colour = "steelblue", fill = "steelblue", alpha = 0.2) +
     scale_x_continuous(name = "richness of reveals") +
     scale_y_continuous(name = "number of rounds with given richness") +
+    facet_wrap(~richness) +
     themeApp()
 }
 
 
-revealerDiversityFig <- function(dat, includeRoundsWithoutDissenters = FALSE) {
+revealerDiversityFig <- function(dat) {
   dat %>%
-    revealStats() %>%
-    filter(richness > 1 - includeRoundsWithoutDissenters) %>%
-    ggplot(aes(x = diversity)) +
+    extractRevealerStat(metric = "diversity") %>%
+    mutate(diversity = as_factor(diversity)) %>%
+    ggplot(aes(x = value)) +
     geom_histogram(colour = NA, fill = "steelblue", alpha = 0.8, bins = 20) +
     scale_x_continuous(name = "diversity of reveals") +
     scale_y_continuous(name = "number of rounds with given diversity") +
+    facet_wrap(~diversity) +
     themeApp()
 }

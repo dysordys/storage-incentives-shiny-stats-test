@@ -67,19 +67,19 @@ revealersPerRound <- function(dat) {
 }
 
 
-reveals <- function(dat) {
+reveals <- function(dat, property) {
   dat %>%
     left_join(revealersPerRound(dat), by = "roundNumber") %>%
     filter(event == "revealed") %>%
     group_by(roundNumber) %>%
-    count(reserveCommitmentHash) %>%
+    count({{property}}) %>%
     ungroup()
 }
 
 
-revealStats <- function(dat, index = invsimpson) {
+revealStats <- function(dat, property, index = invsimpson) {
   dat %>%
-    reveals() %>%
+    reveals({{property}}) %>%
     group_by(roundNumber) %>%
     summarise(totalReveals = sum(n),
               majorityReveals = max(n),
@@ -87,6 +87,27 @@ revealStats <- function(dat, index = invsimpson) {
               richness = n(),
               diversity = index(n),
               .groups = "drop")
+}
+
+
+revealStatsRCHDepth <- function(dat) {
+  revealStats(dat, reserveCommitmentHash) %>%
+    full_join(revealStats(dat, depth), by = "roundNumber",
+              suffix = c("RCH", "Depth")) %>%
+    select(-totalRevealsDepth) %>%
+    rename(totalReveals = totalRevealsRCH)
+}
+
+
+extractRevealerStat <- function(dat, metric = "majorityFraction") {
+  if (metric %ni% c("majorityFraction", "majorityReveals", "richness", "diversity")) {
+    metric <- "richness"
+  }
+  dat %>%
+    revealStatsRCHDepth() %>%
+    select(roundNumber, contains(metric)) %>%
+    rename(`reserve commitment hash` = 2, depth = 3) %>%
+    pivot_longer(cols = !roundNumber, names_to = metric)
 }
 
 
@@ -130,17 +151,20 @@ inaccurateRevealerFrequency <- function(dat) {
 }
 
 
-skippedRounds <- function(dat) {
-  dat %>%
-    filter(event == "won") %>%
-    select(roundNumber, rewardAmount) %>%
-    mutate(skip = roundNumber - lag(roundNumber, default = first(roundNumber) - 1L) - 1L)
+skippedRounds <- function(rounds) {
+  rounds - 1L - lag(rounds, default = min(rounds) - 1L)
+}
+
+
+skippedRoundsTibble <- function(dat) {
+  rounds <- sort(unique(dat$roundNumber))
+  tibble(roundNumber = rounds, skip = skippedRounds(rounds))
 }
 
 
 skippedRoundDistr <- function(dat) {
   dat %>%
-    skippedRounds() %>%
+    skippedRoundsTibble() %>%
     count(skip)
 }
 

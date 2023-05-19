@@ -1,8 +1,0 @@
-- How often are 'honest' nodes misreporting their rc
-- Distribution of freezes over time (how many nodes frozen at any given point)
-- Distribution of freezes over neighborhoods
-- Distribution of anchors
-
-- Read/write communication with online data source
-- Janos's new data: what do the counts per nhood mean, compared to what we can already glean from the data?
-- Neighborhood selection issue for wins across nhoods, total reward, and sum of stakes

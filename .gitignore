@@ -42,6 +42,5 @@ Thumbs.db
 
 # Miscellaneous files
 .httr-oauth
+*.rds
 n-*
-bigData.rds
-data.rds

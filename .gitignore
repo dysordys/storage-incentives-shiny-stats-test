@@ -41,6 +41,5 @@ Thumbs.db
 *.rubbercache
 
 # Miscellaneous files
-.httr-oauth
 *.rds
 n-*

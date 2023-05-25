@@ -249,9 +249,3 @@ server <- function(input, output) {
 
 shinyApp(ui = ui, server = server)
 
-# source("download_clean.R")
-# fetchJsonAll(minRound = max(read_rds("data.rds")$roundNumber)) %>%
-#   cleanData() %>%
-#   mergeData(read_rds("data.rds") %>% select(-date)) %>%
-#   mutate(date = roundsToDate(roundNumber, lubridate::today())) %>%
-#   write_rds("data.rds")

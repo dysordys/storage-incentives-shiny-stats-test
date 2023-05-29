@@ -1,5 +1,7 @@
-library(tidyverse)
-library(fs)
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(fs)
+})
 
 source("download_clean.R")
 

@@ -1,6 +1,10 @@
 clargs <- commandArgs(trailingOnly = TRUE)
 if (length(clargs) > 0) short <- clargs[1] else short <- "long"
 
+dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)  # create personal library
+.libPaths(Sys.getenv("R_LIBS_USER"))  # add to the path
+install.packages("tidyverse")
+
 suppressPackageStartupMessages({
   library(tidyverse)
   library(fs)

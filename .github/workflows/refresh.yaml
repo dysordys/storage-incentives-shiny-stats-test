@@ -13,5 +13,10 @@ jobs:
       # Install aws
       # Install R (and packages)
       # Run refresher script
-      - name: list
-        run: aws --version
+      - name: Refresh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_OUTPUT: json
+        run: aws s3 --profile rw-research-team cp s3://ethswarm-research-team/data-test2.rds data-test2.rds

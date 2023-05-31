@@ -11,5 +11,5 @@ jobs:
       # Run refresher script
       - uses: actions/checkout@v3
         with:
-          ref: my-branch
+          ref: feat/auto-update
       - run: ls -a

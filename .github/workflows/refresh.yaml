@@ -5,4 +5,11 @@ jobs:
   print:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Hello World!"
+      # Check out branch
+      # Install aws
+      # Install R (and packages)
+      # Run refresher script
+      - uses: actions/checkout@v3
+        with:
+          ref: my-branch
+      - run: ls -a

@@ -14,4 +14,4 @@ jobs:
       # Install R (and packages)
       # Run refresher script
       - name: list
-        run: aws -v
+        run: aws --version

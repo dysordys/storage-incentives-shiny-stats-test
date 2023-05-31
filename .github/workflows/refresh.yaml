@@ -9,10 +9,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: feat/auto-update
-      # Check out branch
-      # Install aws
-      # Install R (and packages)
-      # Run refresher script
       - name: Refresh
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

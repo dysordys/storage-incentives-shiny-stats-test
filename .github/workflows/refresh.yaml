@@ -5,4 +5,4 @@ jobs:
   print:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Running!"
+      - run: echo "Hello World!"

@@ -5,11 +5,13 @@ jobs:
   print:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: feat/auto-update
       # Check out branch
       # Install aws
       # Install R (and packages)
       # Run refresher script
-      - uses: actions/checkout@v3
-        with:
-          ref: feat/auto-update
-      - run: ls -a
+      - name: list
+        run: ls -a

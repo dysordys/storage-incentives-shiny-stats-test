@@ -1,0 +1,3 @@
+aws s3 --profile rw-research-team cp s3://ethswarm-research-team/data-test2.rds data-test2.rds
+Rscript data_refresh.R short
+aws s3 --profile rw-research-team cp data-test2.rds s3://ethswarm-research-team/

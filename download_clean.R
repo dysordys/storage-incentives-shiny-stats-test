@@ -27,7 +27,7 @@ downloadAllData <- function(url = "https://api.swarmscan.io/v1/redistribution/ro
 nhoodBinStr <- function(overlay, depth = 8L) {
   if (!is.na(depth) & depth > 0) {
     numHexDigits <- ceiling(depth / 4) # 4: four bits = 1 hex digit
-    str_sub(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
+    substr(R.utils::intToBin(str_sub(overlay, 1, numHexDigits + 2)), 1, depth)
   } else NA
 }
 
@@ -37,12 +37,11 @@ nhoodDec <- function(overlay, depth = 8L) {
 }
 
 
-roundsToDate <- function(rounds, today) {
+roundsToDate <- function(rounds) {
   maxRound <- max(rounds)
-  todayNum <- as.numeric(lubridate::as_datetime(today))
-  map_dbl(rounds, function(x) todayNum - 760 * (maxRound - x)) %>%
-    lubridate::as_datetime() %>%
-    lubridate::as_date()
+  Map(function(x) (760 / 60 / 60 / 24) * (x - maxRound), rounds) |>
+    unlist() |>
+    as.Date(origin = Sys.Date())
 }
 
 

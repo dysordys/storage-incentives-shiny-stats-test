@@ -3,7 +3,7 @@ if (length(clargs) > 0) short <- clargs[1] else short <- NA
 
 dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)  # create personal library
 .libPaths(Sys.getenv("R_LIBS_USER"))  # add to the path
-install.packages("jsonlite")
+install.packages(c("jsonlite", "R.utils"))
 
 # suppressPackageStartupMessages({
 #   library(tidyverse)
@@ -21,5 +21,5 @@ install.packages("jsonlite")
 # fetch(minRound = minRound) %>%
 #   cleanData() %>%
 #   mergeData(read_rds("data.rds") %>% select(-date)) %>%
-#   mutate(date = roundsToDate(roundNumber, lubridate::today())) %>%
+#   mutate(date = roundsToDate(roundNumber)) %>%
 #   write_rds("data.rds")
